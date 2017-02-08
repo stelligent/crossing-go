@@ -19,7 +19,7 @@ Downloading is basically the same:
     crossgo get \
       sourcelocation destinationfile
 
-Where destinationlocation and sourcelocation are of the form s3://bucketname/objectprefix/object
+Where destinationlocation and sourcelocation are of the form s3://bucketname/objectprefix/object . If destinationfile is ommitted, the last part of the sourcelocation key is used as the filename. That is, s3://foo/bar/baz.txt would be written to baz.txt
 
 ### :children_crossing: License
 
