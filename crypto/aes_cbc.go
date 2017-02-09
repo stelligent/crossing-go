@@ -4,11 +4,49 @@ import (
 	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
+	"fmt"
 	"io"
 	"io/ioutil"
 
 	"github.com/aws/aws-sdk-go/service/s3/s3crypto"
 )
+
+// Appends padding.
+func pkcs7Pad(data []byte, blocklen int) ([]byte, error) {
+	if blocklen <= 0 {
+		return nil, fmt.Errorf("invalid blocklen %d", blocklen)
+	}
+	padlen := 1
+	for ((len(data) + padlen) % blocklen) != 0 {
+		padlen = padlen + 1
+	}
+
+	pad := bytes.Repeat([]byte{byte(padlen)}, padlen)
+	return append(data, pad...), nil
+}
+
+// Returns slice of the original data without padding.
+func pkcs7Unpad(data []byte, blocklen int) ([]byte, error) {
+	if blocklen <= 0 {
+		return nil, fmt.Errorf("invalid blocklen %d", blocklen)
+	}
+	if len(data)%blocklen != 0 || len(data) == 0 {
+		return nil, fmt.Errorf("invalid data len %d", len(data))
+	}
+	padlen := int(data[len(data)-1])
+	if padlen > blocklen || padlen == 0 {
+		return nil, fmt.Errorf("invalid padding")
+	}
+	// check padding
+	pad := data[len(data)-padlen:]
+	for i := 0; i < padlen; i++ {
+		if pad[i] != byte(padlen) {
+			return nil, fmt.Errorf("invalid padding")
+		}
+	}
+
+	return data[:len(data)-padlen], nil
+}
 
 // AESCBC Symmetric encryption algorithm. Since Golang designed this
 // with only TLS in mind. We have to load it all into memory meaning
@@ -72,6 +110,7 @@ func (reader *cbcEncryptReader) Read(data []byte) (int, error) {
 		if err != nil {
 			return len(b), err
 		}
+		b, _ = pkcs7Pad(b, reader.encrypter.BlockSize())
 		reader.encrypter.CryptBlocks(b, b)
 		reader.buf = bytes.NewBuffer(b)
 	}
@@ -105,6 +144,7 @@ func (reader *cbcDecryptReader) Read(data []byte) (int, error) {
 		if err != nil {
 			return len(b), err
 		}
+		b, _ = pkcs7Unpad(b, reader.decrypter.BlockSize())
 
 		reader.buf = bytes.NewBuffer(b)
 	}
