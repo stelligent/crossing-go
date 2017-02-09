@@ -20,27 +20,23 @@ import (
 // getCmd represents the get command
 var getCmd = &cobra.Command{
 	Use:   "get [S3 URL] [destination]",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Retrieve an object from S3",
+	Long: `Downloads an S3 object, using Client Side Encryption (CSE)
+to decrypt it securely.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// fmt.Println("get called")
 		if len(args) < 1 || len(args) > 2 {
 			cmd.UsageFunc()(cmd)
-			return
+			os.Exit(1)
 		}
-		if !strings.HasPrefix(args[0], "s3://") {
+
+		s3bucket, s3object, err := parseS3Url(args[0])
+
+		if err != nil {
 			cmd.UsageFunc()(cmd)
-			return
+			os.Exit(1)
 		}
-		// Parse S3 URL for bucket and object key
-		s3url := strings.SplitN(args[0], "/", 4)
-		s3bucket := s3url[2]
-		s3object := s3url[3]
+
 		filedest := ""
 		// If destination file not explicitly given, determine from
 		// last part of S3 object key
@@ -50,11 +46,15 @@ to quickly create a Cobra application.`,
 			objectComponents := strings.Split(args[0], "/")
 			filedest = objectComponents[len(objectComponents)-1]
 		}
-		getS3Cse(s3bucket, s3object, filedest)
+		err = getS3Cse(s3bucket, s3object, filedest)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
 	},
 }
 
-func getS3Cse(s3bucket, s3object, filedest string) {
+func getS3Cse(s3bucket, s3object, filedest string) error {
 	// fmt.Println("getS3 bucket:" + s3bucket + " object:" + s3object + " dest:" + filedest)
 	// cmkID := "_unused_get_kms_key_"
 	params := &s3.GetObjectInput{
@@ -72,8 +72,8 @@ func getS3Cse(s3bucket, s3object, filedest string) {
 		fmt.Println("Error in fetch!")
 		// Print the error, cast err to awserr.Error to get the Code and
 		// Message from an error.
-		fmt.Println(err.Error())
-		return
+		fmt.Println(err)
+		return err
 	}
 
 	// Pretty-print the response data.
@@ -81,8 +81,13 @@ func getS3Cse(s3bucket, s3object, filedest string) {
 	// n, err :=
 	f, err := os.Create(filedest)
 	defer f.Close()
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
 	io.Copy(f, resp.Body)
 	resp.Body.Close()
+	return nil
 }
 
 func init() {
