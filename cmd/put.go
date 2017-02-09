@@ -82,7 +82,7 @@ func init() {
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	putCmd.Flags().StringP("kmskeyid", "k", "", "KMS CMK ID to use for encryption")
-	viper.BindPFlag("kmskeyid", putCmd.Flags().Lookup("kmskeyid"))
+	putCmd.Flags().StringP("kms-key-id", "k", "", "KMS CMK ID to use for encryption")
+	viper.BindPFlag("kmskeyid", putCmd.Flags().Lookup("kms-key-id"))
 
 }
