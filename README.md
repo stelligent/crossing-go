@@ -10,13 +10,13 @@ This utility allows you to do client side encrypted uploads to S3 from the comma
 ### :children_crossing: Usage
 Crossing is designed to be simple to use. To upload, you just need to provide a filepath, bucket location, region and which KMS key to use.
 
-    crossgo put \
+    crossing-go put \
       --kms-key-id abcde-12345-abcde-12345 \
       sourcefile destinationlocation
 
 Downloading is basically the same:
 
-    crossgo get \
+    crossing-go get \
       sourcelocation destinationfile
 
 Where destinationlocation and sourcelocation are of the form s3://bucketname/objectprefix/object . If destinationfile is ommitted, the last part of the sourcelocation key is used as the filename. That is, s3://foo/bar/baz.txt would be written to baz.txt
