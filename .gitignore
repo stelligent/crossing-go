@@ -2,5 +2,6 @@ debug
 
 /.vscode/
 
+crossing-go
 crossing-go_darwin_amd64
 crossing-go_linux_amd64
