@@ -15,7 +15,7 @@ type cbcContentCipherBuilder struct {
 	generator s3crypto.CipherDataGenerator
 }
 
-// AESGCMContentCipherBuilder returns a new encryption only mode structure with a specific cipher
+// AESCBCContentCipherBuilder returns a new encryption only mode structure with a specific cipher
 // for the master key
 func AESCBCContentCipherBuilder(generator s3crypto.CipherDataGenerator) s3crypto.ContentCipherBuilder {
 	return cbcContentCipherBuilder{generator}
