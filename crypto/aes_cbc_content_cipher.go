@@ -36,7 +36,7 @@ func NewAESCBCContentCipher(cd s3crypto.CipherData) (s3crypto.ContentCipher, err
 	cd.CEKAlgorithm = AESCBCPKCS5Padding
 	cd.TagLength = ""
 
-	cipher, err := newAESCBC(cd)
+	cipher, err := newAESCBC(cd, cd.Padder)
 	if err != nil {
 		return nil, err
 	}
