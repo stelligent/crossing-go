@@ -68,7 +68,7 @@ func putS3Cse(bucket string, key string, kmskeyid string, source string) error {
 	handler := s3crypto.NewKMSKeyGenerator(kms.New(sess), cmkID)
 
 	// Create an encryption and decryption client
-	svc := s3crypto.NewEncryptionClient(sess, crosscrypto.AESCBCContentCipherBuilder(handler))
+	svc := s3crypto.NewEncryptionClient(sess, s3crypto.AESCBCContentCipherBuilder(handler, crosscrypto.NewPKCS7Padder(16)))
 
 	_, err = svc.PutObject(params)
 	if err != nil {
