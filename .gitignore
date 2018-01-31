@@ -4,6 +4,8 @@ debug
 
 /vendor/
 
+.DS_Store
+
 crossing-go
 crossing-go_darwin_amd64
 crossing-go_linux_amd64
