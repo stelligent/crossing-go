@@ -13,12 +13,13 @@ const (
 
 type cbcContentCipherBuilder struct {
 	generator s3crypto.CipherDataGenerator
+	padder    s3crypto.Padder
 }
 
 // AESCBCContentCipherBuilder returns a new encryption only mode structure with a specific cipher
 // for the master key
-func AESCBCContentCipherBuilder(generator s3crypto.CipherDataGenerator) s3crypto.ContentCipherBuilder {
-	return cbcContentCipherBuilder{generator}
+func AESCBCContentCipherBuilder(generator s3crypto.CipherDataGenerator, padder s3crypto.Padder) s3crypto.ContentCipherBuilder {
+	return cbcContentCipherBuilder{generator: generator, padder: padder}
 }
 
 func (builder cbcContentCipherBuilder) ContentCipher() (s3crypto.ContentCipher, error) {
@@ -33,7 +34,7 @@ func (builder cbcContentCipherBuilder) ContentCipher() (s3crypto.ContentCipher, 
 // NewAESCBCContentCipher is AESCBCPKCS5Padding provider
 func NewAESCBCContentCipher(cd s3crypto.CipherData) (s3crypto.ContentCipher, error) {
 	cd.CEKAlgorithm = AESCBCPKCS5Padding
-	cd.TagLength = "128"
+	cd.TagLength = ""
 
 	cipher, err := newAESCBC(cd)
 	if err != nil {
