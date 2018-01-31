@@ -66,6 +66,7 @@ func getS3Cse(s3bucket, s3object, filedest string) error {
 	// HeaderV2LoadStrategy
 	svc := s3crypto.NewDecryptionClient(sess)
 	svc.CEKRegistry[crosscrypto.AESCBCPKCS5Padding] = crosscrypto.NewAESCBCContentCipher
+
 	// resp, err := svc.S3Client.GetObject(params)
 	resp, err := svc.GetObject(params)
 	if err != nil {
