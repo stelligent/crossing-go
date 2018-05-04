@@ -23,6 +23,20 @@ var getCmd = &cobra.Command{
 	Short: "Retrieve an object from S3",
 	Long: `Downloads an S3 object, using Client Side Encryption (CSE)
 to decrypt it securely.`,
+	Args: func(cmd *cobra.Command, args []string) error {
+		if err := cobra.MinimumNArgs(1)(cmd, args); err != nil {
+			return err
+		}
+		if err := cobra.MaximumNArgs(2)(cmd, args); err != nil {
+			return err
+		}
+		_, _, err := parseS3Url(args[0])
+		if err != nil {
+			return fmt.Errorf("invalid S3 URL: %s", args[0])
+		}
+		return nil
+	},
+
 	Run: func(cmd *cobra.Command, args []string) {
 		// fmt.Println("get called")
 		if len(args) < 1 || len(args) > 2 {

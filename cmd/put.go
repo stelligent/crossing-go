@@ -23,6 +23,16 @@ var putCmd = &cobra.Command{
 	Short: "Upload a file to S3",
 	Long: `Using Client Side Encryption (CSE), encrypt and upload
 a file to S3.`,
+	Args: func(cmd *cobra.Command, args []string) error {
+		if err := cobra.ExactArgs(2)(cmd, args); err != nil {
+			return err
+		}
+		_, _, err := parseS3Url(args[1])
+		if err != nil {
+			return fmt.Errorf("invalid S3 URL: %s", args[1])
+		}
+		return nil
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) != 2 {
 			cmd.UsageFunc()(cmd)
