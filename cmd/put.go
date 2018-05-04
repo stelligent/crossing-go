@@ -34,20 +34,27 @@ a file to S3.`,
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) != 2 {
-			cmd.UsageFunc()(cmd)
-			os.Exit(1)
-		}
-
+		sourceFile := args[0]
 		s3bucket, s3object, err := parseS3Url(args[1])
 
 		if err != nil {
-			cmd.UsageFunc()(cmd)
+			fmt.Fprintf(os.Stderr, "%s", err)
 			os.Exit(1)
 		}
-		err = putS3Cse(s3bucket, s3object, viper.GetString("kmskeyid"), args[0])
+		// If destination is "" or /
+		// assume passed bare bucket and generate key
+		// from source filename
+		if s3object == "" || s3object == "/" {
+			s3object = sourceFile
+		}
+		// If object key ends with /, assume key is a
+		// key prefix and append on the source file
+		if s3object[len(s3object)-1:] == "/" {
+			s3object = s3object + sourceFile
+		}
+		err = putS3Cse(s3bucket, s3object, viper.GetString("kmskeyid"), sourceFile)
 		if err != nil {
-			fmt.Printf("err uploading file: %s\n", err)
+			fmt.Fprintf(os.Stderr, "err uploading file: %s\n", err)
 			os.Exit(1)
 		}
 	},
@@ -65,6 +72,7 @@ func putS3Cse(bucket string, key string, kmskeyid string, source string) error {
 	file.Read(buffer)
 	fileBytes := bytes.NewReader(buffer)
 	fileType := http.DetectContentType(buffer)
+
 	params := &s3.PutObjectInput{
 		Bucket: &bucket,
 		Key:    &key,
