@@ -69,7 +69,9 @@ func getS3Cse(s3bucket, s3object, filedest string) error {
 	params := &s3.GetObjectInput{
 		Bucket: &s3bucket,
 		Key:    &s3object}
-	sess := session.New()
+	sess := session.Must(session.NewSessionWithOptions(session.Options{
+		SharedConfigState: session.SharedConfigEnable,
+	}))
 	// Create the KeyProvider
 	// handler := s3crypto.NewKMSKeyGenerator(kms.New(sess), cmkID)
 	// HeaderV2LoadStrategy

@@ -72,7 +72,9 @@ func putS3Cse(bucket string, key string, kmskeyid string, source string) error {
 		// ContentLength: aws.Int64(size),
 		ContentType: aws.String(fileType),
 	}
-	sess := session.Must(session.NewSession())
+	sess := session.Must(session.NewSessionWithOptions(session.Options{
+		SharedConfigState: session.SharedConfigEnable,
+	}))
 	cmkID := kmskeyid
 	// Create the KeyProvider
 	handler := s3crypto.NewKMSKeyGenerator(kms.New(sess), cmkID)
