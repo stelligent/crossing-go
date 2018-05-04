@@ -19,7 +19,7 @@ import (
 
 // getCmd represents the get command
 var getCmd = &cobra.Command{
-	Use:   "get [S3 URL] [destination]",
+	Use:   "get S3URL [destination]",
 	Short: "Retrieve an object from S3",
 	Long: `Downloads an S3 object, using Client Side Encryption (CSE)
 to decrypt it securely.`,
