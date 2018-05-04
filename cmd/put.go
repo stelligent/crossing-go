@@ -19,7 +19,7 @@ import (
 
 // putCmd represents the put command
 var putCmd = &cobra.Command{
-	Use:   "put [source] [S3 URL]",
+	Use:   "put SOURCE S3URL",
 	Short: "Upload a file to S3",
 	Long: `Using Client Side Encryption (CSE), encrypt and upload
 a file to S3.`,
