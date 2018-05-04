@@ -1,18 +1,22 @@
 package cmd
 
 import (
-	"errors"
-	"strings"
+	"fmt"
+	"net/url"
 )
 
-func parseS3Url(url string) (bucket string, key string, err error) {
-	if !strings.HasPrefix(url, "s3://") {
-		return "", "", errors.New("malformed S3 URL")
+func parseS3Url(s3urlstring string) (bucket string, key string, err error) {
+	s3url, err := url.Parse(s3urlstring)
+	if err != nil {
+		return "", "", err
 	}
-	// Parse S3 URL for bucket and object key
-	s3url := strings.SplitN(url, "/", 4)
-	bucket = s3url[2]
-	key = s3url[3]
+	if s3url.Scheme != "s3" {
+		return "", "", fmt.Errorf("invalid schema: %s not s3", s3url.Scheme)
+	}
+	bucket = s3url.Host
+	key = s3url.Path
 	err = nil
+	fmt.Printf("Host = %s, Path = %s", bucket, key)
+
 	return
 }
