@@ -16,7 +16,6 @@ func parseS3Url(s3urlstring string) (bucket string, key string, err error) {
 	bucket = s3url.Host
 	key = s3url.Path
 	err = nil
-	fmt.Printf("Host = %s, Path = %s", bucket, key)
 
 	return
 }
