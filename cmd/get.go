@@ -38,11 +38,6 @@ to decrypt it securely.`,
 	},
 
 	Run: func(cmd *cobra.Command, args []string) {
-		// fmt.Println("get called")
-		if len(args) < 1 || len(args) > 2 {
-			cmd.UsageFunc()(cmd)
-			os.Exit(1)
-		}
 
 		s3bucket, s3object, err := parseS3Url(args[0])
 
