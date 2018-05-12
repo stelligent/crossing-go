@@ -17,6 +17,7 @@ var RootCmd = &cobra.Command{
 	Long: `crossing-go implements get/put to S3 using KMS envelope
 client-side encryption with the AWS SDK. It is intended to be object
 compatible with the Ruby crossing utility.`,
+  Version: "0.0.5",
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	//	Run: func(cmd *cobra.Command, args []string) { },
