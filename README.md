@@ -24,7 +24,7 @@ Downloading is basically the same:
     crossing-go get \
       sourcelocation destinationfile
 
-Where destinationlocation and sourcelocation are of the form s3://bucketname/objectprefix/object . If destinationfile is ommitted, the last part of the sourcelocation key is used as the filename. That is, s3://foo/bar/baz.txt would be written to baz.txt . If destinationlocation is a bare bucket or ends in "/", a destination object is created with the same name as the sourcefile.
+Where destinationlocation and sourcelocation are of the form s3://bucketname/objectprefix/object . If destinationfile is ommitted, the last part of the sourcelocation key is used as the filename. That is, s3://foo/bar/baz.txt would be written to baz.txt . If destinationlocation is a bare bucket or ends in "/", a destination object is created with the same name as the sourcefile. If destinationfile is a directory, a file is created with the object key as the filename.
 
 A special feature is the ability to download a YAML-compatible file and print all of its values as environment variable exports, suitable for sourcing in a shell.
 
