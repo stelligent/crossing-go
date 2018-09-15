@@ -52,9 +52,16 @@ to decrypt it securely.`,
 		if len(args) == 2 {
 			filedest = args[1]
 		} else {
-			objectComponents := strings.Split(s3object, "/")
-			filedest = objectComponents[len(objectComponents)-1]
+			filedest = "."
 		}
+
+		dest, err := os.Stat(filedest)
+
+		if dest.IsDir() {
+			objectComponents := strings.Split(s3object, "/")
+			filedest = filedest + "/" + objectComponents[len(objectComponents)-1]
+		}
+
 		err = getS3Cse(s3bucket, s3object, filedest)
 		if err != nil {
 			fmt.Println(err)
