@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/stelligent/crossing-go/crypto"
+	"github.com/clunaslunas/crossing-go/crypto"
 
 	"github.com/aws/aws-sdk-go/service/s3"
 )
