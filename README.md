@@ -8,6 +8,17 @@ This utility allows you to do client side encrypted uploads to S3 from the comma
 
 ## :children_crossing: Installation
 
+    git clone git@github.com:stelligent/crossing-go.git
+    cd crossings-go
+    go build
+
+## :children_crossing: Verify Installation
+Change into the directory where crossings-go was built
+
+    ./crossing-go --version
+    crossing-go version 0.0.5
+
+
 ## :children_crossing: Usage
 
 Crossing is designed to be simple to use. To upload, you just need to provide a filepath, bucket location, region and which KMS key to use.
