@@ -10,7 +10,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/clunaslunas/crossing-go/crypto"
+	"github.com/stelligent/crossing-go/crypto"
 
 	"strings"
 

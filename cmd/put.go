@@ -15,7 +15,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/clunaslunas/crossing-go/crypto"
+	"github.com/stelligent/crossing-go/crypto"
 )
 
 // putCmd represents the put command
