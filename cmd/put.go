@@ -120,6 +120,6 @@ func init() {
 	putCmd.Flags().BoolP("verbose-output", "V", false, "Set to output the version id of the uploaded object")
 	putCmd.MarkFlagRequired("kms-key-id")
 	viper.BindPFlag("kmskeyid", putCmd.Flags().Lookup("kms-key-id"))
-	viper.BindPFlag("verboseoutput", putCmd.Flags().Lookup("output-version-id"))
+	viper.BindPFlag("verboseoutput", putCmd.Flags().Lookup("verbose-output"))
 
 }
