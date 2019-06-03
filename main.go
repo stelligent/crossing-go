@@ -2,7 +2,7 @@
 
 package main
 
-import "github.com/clunaslunas/crossing-go/cmd"
+import "github.com/stelligent/crossing-go/cmd"
 
 func main() {
 	cmd.Execute()
