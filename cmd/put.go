@@ -54,7 +54,7 @@ a file to S3.`,
 			s3object = s3object + sourceFile
 		}
 		versionId, err := putS3Cse(s3bucket, s3object, viper.GetString("kmskeyid"), sourceFile)
-		flagBool := viper.GetBool("outputversionid")
+		flagBool := viper.GetBool("verboseoutput")
 
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "err uploading file: %s\n", err)
@@ -117,9 +117,9 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	putCmd.Flags().StringP("kms-key-id", "k", "", "KMS CMK ID to use for encryption")
-	putCmd.Flags().BoolP("output-version-id", "o", false, "Set to output the version id of the uploaded object")
+	putCmd.Flags().BoolP("verbose-output", "V", false, "Set to output the version id of the uploaded object")
 	putCmd.MarkFlagRequired("kms-key-id")
 	viper.BindPFlag("kmskeyid", putCmd.Flags().Lookup("kms-key-id"))
-	viper.BindPFlag("outputversionid", putCmd.Flags().Lookup("output-version-id"))
+	viper.BindPFlag("verboseoutput", putCmd.Flags().Lookup("output-version-id"))
 
 }
