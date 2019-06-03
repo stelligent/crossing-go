@@ -34,7 +34,7 @@ a file to S3.`,
 		}
 		return nil
 	},
-	Run: func(cmd *cobra.Command, args []string) {		
+	Run: func(cmd *cobra.Command, args []string) {
 		sourceFile := args[0]
 		s3bucket, s3object, err := parseS3Url(args[1])
 
