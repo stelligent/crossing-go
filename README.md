@@ -9,7 +9,7 @@ This utility allows you to do client side encrypted uploads to S3 from the comma
 ## :children_crossing: Build
 
     git clone git@github.com:stelligent/crossing-go.git
-    cd crossings-go
+    cd crossing-go
     go build
 
 ## :children_crossing: Verify Build
