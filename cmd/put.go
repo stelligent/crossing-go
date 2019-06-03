@@ -105,10 +105,17 @@ func putS3Cse(bucket string, key string, kmskeyid string, source string) ([]byte
 		fmtErr := fmt.Errorf("bad response: %s", err)
 
 		return nil, fmtErr
-	} else {
-		versionId, _ := json.Marshal(result.VersionId)
-		return versionId, nil
+	} 
+
+	versionId, err := json.Marshal(result.VersionId)
+	
+	if err != nil {
+		fmtErr := fmt.Errorf("Issue with json.Marshal %s", err)
+  		return nil, fmtErr
 	}
+
+	return versionId, nil
+
 }
 
 func init() {
