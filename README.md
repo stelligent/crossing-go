@@ -13,7 +13,7 @@ This utility allows you to do client side encrypted uploads to S3 from the comma
     go build
 
 ## :children_crossing: Verify Build
-Change into the directory where crossings-go was built
+Change into the directory where crossing-go was built
 
     ./crossing-go --version
     crossing-go version 0.0.5

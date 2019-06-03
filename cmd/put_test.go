@@ -2,14 +2,16 @@ package cmd
 
 import (
 	"testing"
+	"fmt"
 
 	"github.com/stretchr/testify/assert"
 )
 
 // TestPutS3Cse tests functionality of putS3Cse
 func TestPutS3Cse(t *testing.T) {
-	err := putS3Cse("nosuchbucket", "nokey", "badkmsid", "invalidsource")
+	vString, err := putS3Cse("nosuchbucket", "nokey", "badkmsid", "invalidsource")
 	assert.Error(t, err, "Calling with bad data returns error")
+	fmt.Println(vString)
 }
 
 func Test_putS3Cse(t *testing.T) {
@@ -37,9 +39,10 @@ func Test_putS3Cse(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := putS3Cse(tt.args.bucket, tt.args.key, tt.args.kmskeyid, tt.args.source); (err != nil) != tt.wantErr {
+			if vString, err := putS3Cse(tt.args.bucket, tt.args.key, tt.args.kmskeyid, tt.args.source); (err != nil) != tt.wantErr {
 				t.Errorf("putS3Cse() error = %v, wantErr %v", err, tt.wantErr)
-			}
+				fmt.Println(vString)
+			}		
 		})
 	}
 }
