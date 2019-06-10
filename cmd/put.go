@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -52,18 +53,26 @@ a file to S3.`,
 		if s3object[len(s3object)-1:] == "/" {
 			s3object = s3object + sourceFile
 		}
-		err = putS3Cse(s3bucket, s3object, viper.GetString("kmskeyid"), sourceFile)
+		versionId, err := putS3Cse(s3bucket, s3object, viper.GetString("kmskeyid"), sourceFile)
+		flagBool := viper.GetBool("verboseoutput")
+
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "err uploading file: %s\n", err)
 			os.Exit(1)
 		}
+		if flagBool {
+			fmt.Fprintf(os.Stdout, "{ \"VersionId\": %s }\n", string(versionId))
+		}
+
 	},
 }
 
-func putS3Cse(bucket string, key string, kmskeyid string, source string) error {
+func putS3Cse(bucket string, key string, kmskeyid string, source string) ([]byte, error) {
 	file, err := os.Open(source)
 	if err != nil {
-		return fmt.Errorf("err opening file: %s", err)
+		fmtErr := fmt.Errorf("err opening file: %s", err)
+
+		return nil, fmtErr
 	}
 	defer file.Close()
 	fileInfo, _ := file.Stat()
@@ -90,11 +99,23 @@ func putS3Cse(bucket string, key string, kmskeyid string, source string) error {
 	// Create an encryption and decryption client
 	svc := s3crypto.NewEncryptionClient(sess, s3crypto.AESCBCContentCipherBuilder(handler, crosscrypto.NewPKCS7Padder(16)))
 
-	_, err = svc.PutObject(params)
+	result, err := svc.PutObject(params)
+
 	if err != nil {
-		return fmt.Errorf("bad response: %s", err)
+		fmtErr := fmt.Errorf("bad response: %s", err)
+
+		return nil, fmtErr
 	}
-	return nil
+
+	versionId, err := json.Marshal(result.VersionId)
+
+	if err != nil {
+		fmtErr := fmt.Errorf("Issue with json.Marshal %s", err)
+		return nil, fmtErr
+	}
+
+	return versionId, nil
+
 }
 
 func init() {
@@ -103,7 +124,9 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	putCmd.Flags().StringP("kms-key-id", "k", "", "KMS CMK ID to use for encryption")
+	putCmd.Flags().BoolP("verbose-output", "V", false, "Set to output the version id of the uploaded object")
 	putCmd.MarkFlagRequired("kms-key-id")
 	viper.BindPFlag("kmskeyid", putCmd.Flags().Lookup("kms-key-id"))
+	viper.BindPFlag("verboseoutput", putCmd.Flags().Lookup("verbose-output"))
 
 }

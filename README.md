@@ -6,7 +6,18 @@ Crossing is a utility for storing objects in S3 while taking advantage of client
 
 This utility allows you to do client side encrypted uploads to S3 from the command line, allowing you to quickly upload files to S3 securely. It is a golang implementation of crossing, a Ruby utility.
 
-## :children_crossing: Installation
+## :children_crossing: Build
+
+    git clone git@github.com:stelligent/crossing-go.git
+    cd crossing-go
+    go build
+
+## :children_crossing: Verify Build
+Change into the directory where crossing-go was built
+
+    ./crossing-go --version
+    crossing-go version 0.0.5
+
 
 ## :children_crossing: Usage
 
