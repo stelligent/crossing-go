@@ -7,7 +7,9 @@ jobs:
       - checkout
       - run:
           name: Run unit tests
-          command: echo "foo bar"
+          command: |
+            cd cmd
+            go test
   build:
     docker:
       - image: circleci/golang:1.12
