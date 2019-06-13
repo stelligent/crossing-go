@@ -56,7 +56,7 @@ func TestVersionIdOutput(t *testing.T) {
 		vstring, err := putS3Cse(arg.bucket, arg.key, arg.kmskeyid, arg.source)
 		isvalid := utf8.Valid(vstring)
 		if err != nil {
-			t.Errorf("Error occured: %v, wanted true", err)
+			t.Errorf("Error occured: %v", err)
 			cleanUp(arg.bucket, arg.kmskeyid, arg.key)
 		} else if len(vstring) < 0 {
 			t.Errorf("No version string was returned")
