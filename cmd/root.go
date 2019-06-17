@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -12,8 +13,8 @@ var cfgFile string
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
-	Use:   "crossing-go",
-	Short: "An S3 utility using client-side encryption",
+	Use:     "crossing-go",
+	Short:   "An S3 utility using client-side encryption",
 	Version: "0.0.5",
 	Long: `crossing-go implements get/put to S3 using KMS envelope
 client-side encryption with the AWS SDK. It is intended to be object
@@ -48,9 +49,15 @@ func initConfig() {
 		viper.SetConfigFile(cfgFile)
 	}
 
-	viper.SetConfigName(".crossing-go") // name of config file (without extension)
-	viper.AddConfigPath("$HOME")        // adding home directory as first search path
-	viper.AutomaticEnv()                // read in environment variables that match
+	// Initialize global encryption client and decryption client
+	sess := session.Must(session.NewSessionWithOptions(session.Options{
+		SharedConfigState: session.SharedConfigEnable,
+	}))
+
+	viper.SetConfigName(".crossing-go")  // name of config file (without extension)
+	viper.AddConfigPath("$HOME")         // adding home directory as first search path
+	viper.SetDefault("ClientSess", sess) // set global session to pass around
+	viper.AutomaticEnv()                 // read in environment variables that match
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {

@@ -15,7 +15,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/stelligent/crossing-go/crypto"
+	crosscrypto "github.com/stelligent/crossing-go/crypto"
 )
 
 // putCmd represents the put command
@@ -53,6 +53,14 @@ a file to S3.`,
 		if s3object[len(s3object)-1:] == "/" {
 			s3object = s3object + sourceFile
 		}
+
+		//Return an encryption client from the global session
+		//sess := viper.Get("ClientSess")
+		//cmkID := viper.GetString("kmskeyid")
+		//newSess := sess.(client.ConfigProvider)
+		// Create the KeyProvider
+		//handler := s3crypto.NewKMSKeyGenerator(kms.New(newSess), cmkID)
+
 		versionId, err := putS3Cse(s3bucket, s3object, viper.GetString("kmskeyid"), sourceFile)
 		flagBool := viper.GetBool("verboseoutput")
 
