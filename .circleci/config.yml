@@ -1,0 +1,54 @@
+version: 2
+jobs:
+  unit_test:
+    docker:
+      - image: circleci/golang:1.12
+    steps:
+      - checkout
+      - run:
+          name: Run unit tests
+          command: |
+            cd cmd
+            go test
+  build:
+    docker:
+      - image: circleci/golang:1.12
+    steps:
+      - checkout
+      - run:
+          name: Build binary
+          command: go build
+      - run:
+          name: Output version
+          command: ./crossing-go --version
+      - persist_to_workspace:
+          root: /home/circleci/project
+          paths:
+            - crossing-go
+  publish:
+    docker:
+      - image: circleci/golang:1.12
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: "Publish Release on GitHub"
+          command: |
+            go get -u github.com/tcnksm/ghr
+            VERSION=$(./crossing-go --version | awk '{ print $3 }')
+            echo "New Version: ${VERSION}"
+            ghr -t ${GITHUB_TOKEN} -u ${GITHUB_ORG_NAME} -r ${GITHUB_REPO_NAME} -c ${CIRCLE_SHA1} -delete ${VERSION} .
+
+workflows:
+  version: 2
+  test-and-publish:
+    jobs:
+      - unit_test
+      - build
+      - publish:
+          requires:
+            - unit_test
+            - build
+          filters:
+            branches:
+              only: master
