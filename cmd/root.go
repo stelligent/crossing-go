@@ -13,15 +13,9 @@ var cfgFile string
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
-<<<<<<< HEAD
 	Use:     "crossing-go",
 	Short:   "An S3 utility using client-side encryption",
 	Version: "0.0.6",
-=======
-	Use:   "crossing-go",
-	Short: "An S3 utility using client-side encryption",
-	Version: "0.1.0",
->>>>>>> origin/v0.1.0
 	Long: `crossing-go implements get/put to S3 using KMS envelope
 client-side encryption with the AWS SDK. It is intended to be object
 compatible with the Ruby crossing utility.`,
