@@ -1,11 +1,10 @@
 package cmd
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"os"
+	"strings"
 
 	"github.com/stelligent/crossing-go/clientfactory"
 
@@ -14,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3crypto"
+	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -62,9 +62,15 @@ a file to S3.`,
 		newSess := sess.(*session.Session)
 		//Create the KeyProvider
 		handler := s3crypto.NewKMSKeyGenerator(kms.New(newSess), cmkID)
-		encryptionclient := clientfactory.NewEncryptyionClient(newSess, s3crypto.AESCBCContentCipherBuilder(handler, crosscrypto.NewPKCS7Padder(16)))
 
-		versionID, err := putS3Cse(encryptionclient, s3bucket, s3object, viper.GetString("kmskeyid"), sourceFile)
+		encryptionclient := Put{
+			Client: clientfactory.NewEncryptyionClient(newSess, s3crypto.AESCBCContentCipherBuilder(handler, crosscrypto.NewPKCS7Padder(16))).S3Client,
+			Bucket: s3bucket,
+			Key:    s3object,
+			Source: sourceFile,
+		}
+
+		versionID, err := encryptionclient.putS3Cse()
 		flagBool := viper.GetBool("verboseoutput")
 
 		if err != nil {
@@ -78,30 +84,21 @@ a file to S3.`,
 	},
 }
 
-func putS3Cse(client *s3crypto.EncryptionClient, bucket string, key string, kmskeyid string, source string) ([]byte, error) {
-	file, err := os.Open(source)
-	if err != nil {
-		fmtErr := fmt.Errorf("err opening file: %s", err)
+// Put provides the ability to put objects
+type Put struct {
+	Client s3iface.S3API
+	Bucket string
+	Key    string
+	Source string
+}
 
-		return nil, fmtErr
-	}
-	defer file.Close()
-	fileInfo, _ := file.Stat()
-	size := fileInfo.Size()
-	buffer := make([]byte, size)
-	file.Read(buffer)
-	fileBytes := bytes.NewReader(buffer)
-	fileType := http.DetectContentType(buffer)
+func (p *Put) putS3Cse() ([]byte, error) {
 
-	params := &s3.PutObjectInput{
-		Bucket: &bucket,
-		Key:    &key,
-		Body:   fileBytes,
-		// ContentLength: aws.Int64(size),
-		ContentType: aws.String(fileType),
-	}
-
-	result, err := client.PutObject(params)
+	result, err := p.Client.PutObject(&s3.PutObjectInput{
+		Bucket: aws.String(p.Bucket),
+		Key:    aws.String(p.Key),
+		Body:   aws.ReadSeekCloser(strings.NewReader(p.Source)),
+	})
 
 	if err != nil {
 		fmtErr := fmt.Errorf("bad response: %s", err)
