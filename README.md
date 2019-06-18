@@ -6,6 +6,24 @@ Crossing is a utility for storing objects in S3 while taking advantage of client
 
 This utility allows you to do client side encrypted uploads to S3 from the command line, allowing you to quickly upload files to S3 securely. It is a golang implementation of crossing, a Ruby utility.
 
+## :children_crossing: AWS Profile
+Please note that crossing-go requires that your AWS credentials is properfly configured.
+[Configuration and Credentials Files](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html)
+
+## :children_crossing: Go Modules
+
+Crossing-go has moved to go modules for dependency management
+Prerequisites:
+    *[Install latest Go 1.11 release](https://golang.org/dl/)
+    
+    ** Using go modules **
+    When starting a new terminal session you can set an enverionment variable:
+    export GO111MODULE=on
+
+    ** or **
+    GO111MODULE=on go [command]
+
+
 ## :children_crossing: Build
 
     git clone git@github.com:stelligent/crossing-go.git
@@ -76,6 +94,33 @@ outputs
     export testyml__f__0="1"
     export testyml__f__1="2"
 
+## :children_crossing: Contributing
+Contributing to crossing-go will require that unit tests pass. To run unit tests in a go module environment please follow 
+the instructions under the go modules heading first.
+
+Tests are located in each submodules directory:
+├── cmd
+│   ├── env.go
+│   ├── get.go
+│   ├── get_test.go
+│   ├── put.go
+│   ├── put_test.go
+│   ├── root.go
+│   ├── root_test.go
+│   ├── util.go
+│   └── util_test.go
+├── crypto
+│   ├── aes_cbc_content_cipher.go
+│   ├── aes_cbc_content_cipher_test.go
+│   ├── aes_cbc.go
+│   ├── aes_cbc_test.go
+│   ├── cipher_util.go
+│   └── pkcs5_padder.go
+
+Running tests for cmd module using the temp AWS profile:
+    cd cmd
+    AWS_PROFILE=temp go test ./...
+    ok      github.com/stelligent/crossing-go/cmd
 ## CAVEATS / KNOWN BUGS
 
 The "env" subcommand does not correctly escape shell strings
