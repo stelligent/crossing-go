@@ -5,6 +5,7 @@ debug
 /vendor/
 
 .DS_Store
+*.sum
 
 crossing-go
 crossing-go_darwin_amd64
