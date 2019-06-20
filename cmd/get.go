@@ -5,12 +5,13 @@ import (
 	"io"
 	"os"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3/s3crypto"
+	"github.com/aws/aws-sdk-go/service/s3/s3iface"
+	"github.com/stelligent/crossing-go/clientfactory"
 
 	"github.com/spf13/cobra"
-
-	"github.com/stelligent/crossing-go/crypto"
+	"github.com/spf13/viper"
 
 	"strings"
 
@@ -62,7 +63,16 @@ to decrypt it securely.`,
 			filedest = filedest + "/" + objectComponents[len(objectComponents)-1]
 		}
 
-		err = getS3Cse(s3bucket, s3object, filedest)
+		sess := viper.Get("ClientSess").(*session.Session)
+
+		decyrptionclient := Get{
+			Client:          clientfactory.NewDecryptionClient(sess).S3Client,
+			Bucket:          s3bucket,
+			Key:             s3object,
+			FileDestination: filedest,
+		}
+
+		err = decyrptionclient.getS3Cse()
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -70,23 +80,23 @@ to decrypt it securely.`,
 	},
 }
 
-func getS3Cse(s3bucket, s3object, filedest string) error {
+// Get provides the ability to get objects
+type Get struct {
+	Client          s3iface.S3API
+	Bucket          string
+	Key             string
+	FileDestination string
+}
+
+func (g *Get) getS3Cse() error {
 	// fmt.Println("getS3 bucket:" + s3bucket + " object:" + s3object + " dest:" + filedest)
 	// cmkID := "_unused_get_kms_key_"
-	params := &s3.GetObjectInput{
-		Bucket: &s3bucket,
-		Key:    &s3object}
-	sess := session.Must(session.NewSessionWithOptions(session.Options{
-		SharedConfigState: session.SharedConfigEnable,
-	}))
-	// Create the KeyProvider
-	// handler := s3crypto.NewKMSKeyGenerator(kms.New(sess), cmkID)
-	// HeaderV2LoadStrategy
-	svc := s3crypto.NewDecryptionClient(sess)
-	svc.CEKRegistry[crosscrypto.AESCBCPKCS5Padding] = crosscrypto.NewAESCBCContentCipher
 
-	// resp, err := svc.S3Client.GetObject(params)
-	resp, err := svc.GetObject(params)
+	result, err := g.Client.GetObject(&s3.GetObjectInput{
+		Bucket: aws.String(g.Bucket),
+		Key:    aws.String(g.Key),
+	})
+
 	if err != nil {
 		fmt.Println("Error in fetch!")
 		// Print the error, cast err to awserr.Error to get the Code and
@@ -98,14 +108,14 @@ func getS3Cse(s3bucket, s3object, filedest string) error {
 	// Pretty-print the response data.
 	// fmt.Println(resp)
 	// n, err :=
-	f, err := os.Create(filedest)
+	f, err := os.Create(g.FileDestination)
 	defer f.Close()
 	if err != nil {
 		fmt.Println(err)
 		return err
 	}
-	io.Copy(f, resp.Body)
-	resp.Body.Close()
+	io.Copy(f, result.Body)
+	result.Body.Close()
 	return nil
 }
 
