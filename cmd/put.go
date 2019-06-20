@@ -77,7 +77,7 @@ a file to S3.`,
 			os.Exit(1)
 		}
 		if flagBool {
-			fmt.Fprintf(os.Stdout, "{ \"versionId\": %s }\n", string(versionID))
+			fmt.Fprintf(os.Stdout, "{ \"VersionId\": %s }\n", string(versionID))
 		}
 
 	},
