@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3crypto"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/stelligent/crossing-go/crypto"
 
@@ -62,7 +63,8 @@ to decrypt it securely.`,
 			filedest = filedest + "/" + objectComponents[len(objectComponents)-1]
 		}
 
-		err = getS3Cse(s3bucket, s3object, filedest)
+		versionid := viper.GetString("versionid")
+		err = getS3Cse(s3bucket, s3object, versionid, filedest)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -70,12 +72,16 @@ to decrypt it securely.`,
 	},
 }
 
-func getS3Cse(s3bucket, s3object, filedest string) error {
+func getS3Cse(s3bucket, s3object, versionid, filedest string) error {
 	// fmt.Println("getS3 bucket:" + s3bucket + " object:" + s3object + " dest:" + filedest)
 	// cmkID := "_unused_get_kms_key_"
 	params := &s3.GetObjectInput{
 		Bucket: &s3bucket,
 		Key:    &s3object}
+	if versionid != "" {
+		(*params).VersionId = &versionid
+	}
+
 	sess := session.Must(session.NewSessionWithOptions(session.Options{
 		SharedConfigState: session.SharedConfigEnable,
 	}))
@@ -122,4 +128,6 @@ func init() {
 	// is called directly, e.g.:
 	// getCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
+	getCmd.Flags().StringP("version-id", "v", "", "Version ID of the object to download")
+	viper.BindPFlag("versionid", getCmd.Flags().Lookup("version-id"))
 }
