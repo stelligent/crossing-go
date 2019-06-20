@@ -6,8 +6,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/stelligent/crossing-go/clientfactory"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/kms"
@@ -61,9 +59,10 @@ a file to S3.`,
 		newSess := viper.Get("ClientSess").(*session.Session)
 		//Create the KeyProvider
 		handler := s3crypto.NewKMSKeyGenerator(kms.New(newSess), cmkID)
-
+		cipher := s3crypto.AESCBCContentCipherBuilder(handler, crosscrypto.NewPKCS7Padder(16))
+		svc := s3crypto.NewEncryptionClient(newSess, cipher)
 		encryptionclient := Put{
-			Client: clientfactory.NewEncryptionClient(newSess, s3crypto.AESCBCContentCipherBuilder(handler, crosscrypto.NewPKCS7Padder(16))).S3Client,
+			Client: svc.S3Client,
 			Bucket: s3bucket,
 			Key:    s3object,
 			Source: sourceFile,
