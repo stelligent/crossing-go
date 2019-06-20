@@ -63,7 +63,7 @@ a file to S3.`,
 		handler := s3crypto.NewKMSKeyGenerator(kms.New(newSess), cmkID)
 
 		encryptionclient := Put{
-			Client: clientfactory.NewEncryptyionClient(newSess, s3crypto.AESCBCContentCipherBuilder(handler, crosscrypto.NewPKCS7Padder(16))).S3Client,
+			Client: clientfactory.NewEncryptionClient(newSess, s3crypto.AESCBCContentCipherBuilder(handler, crosscrypto.NewPKCS7Padder(16))).S3Client,
 			Bucket: s3bucket,
 			Key:    s3object,
 			Source: sourceFile,
