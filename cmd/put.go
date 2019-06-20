@@ -57,9 +57,8 @@ a file to S3.`,
 		}
 
 		//Return an encryption client from the global session
-		sess := viper.Get("ClientSess")
 		cmkID := viper.GetString("kmskeyid")
-		newSess := sess.(*session.Session)
+		newSess := viper.Get("ClientSess").(*session.Session)
 		//Create the KeyProvider
 		handler := s3crypto.NewKMSKeyGenerator(kms.New(newSess), cmkID)
 
