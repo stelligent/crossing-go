@@ -1,10 +1,11 @@
 package cmd
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
-	"strings"
 
 	"github.com/stelligent/crossing-go/clientfactory"
 
@@ -92,11 +93,27 @@ type Put struct {
 }
 
 func (p *Put) putS3Cse() ([]byte, error) {
+	file, err := os.Open(p.Source)
+
+	if err != nil {
+		fmtErr := fmt.Errorf("err opening file: %s", err)
+
+		return nil, fmtErr
+	}
+
+	defer file.Close()
+	fileInfo, _ := file.Stat()
+	size := fileInfo.Size()
+	buffer := make([]byte, size)
+	file.Read(buffer)
+	fileBytes := bytes.NewReader(buffer)
+	fileType := http.DetectContentType(buffer)
 
 	result, err := p.Client.PutObject(&s3.PutObjectInput{
-		Bucket: aws.String(p.Bucket),
-		Key:    aws.String(p.Key),
-		Body:   aws.ReadSeekCloser(strings.NewReader(p.Source)),
+		Bucket:      aws.String(p.Bucket),
+		Key:         aws.String(p.Key),
+		Body:        fileBytes,
+		ContentType: aws.String(fileType),
 	})
 
 	if err != nil {
