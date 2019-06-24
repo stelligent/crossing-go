@@ -7,8 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3/s3crypto"
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
-	"github.com/stelligent/crossing-go/clientfactory"
+	crosscrypto "github.com/stelligent/crossing-go/crypto"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -64,9 +65,11 @@ to decrypt it securely.`,
 		}
 
 		sess := viper.Get("ClientSess").(*session.Session)
+		svc := s3crypto.NewDecryptionClient(sess)
+		svc.CEKRegistry[crosscrypto.AESCBCPKCS5Padding] = crosscrypto.NewAESCBCContentCipher
 
 		decyrptionclient := Get{
-			Client:          clientfactory.NewDecryptionClient(sess).S3Client,
+			Client:          svc.S3Client,
 			Bucket:          s3bucket,
 			Key:             s3object,
 			FileDestination: filedest,
