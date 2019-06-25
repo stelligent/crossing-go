@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"bufio"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -18,7 +20,7 @@ func (m mockedPutObjectOutput) PutObject(in *s3.PutObjectInput) (*s3.PutObjectOu
 	return &m.Output, nil
 }
 func TestPut_putS3Cse(t *testing.T) {
-
+	reader := strings.NewReader("Hello")
 	cases := []struct {
 		Output   s3.PutObjectOutput
 		Expected []byte
@@ -39,10 +41,12 @@ func TestPut_putS3Cse(t *testing.T) {
 
 	for i, tt := range cases {
 		p := Put{
-			Client: mockedPutObjectOutput{Output: tt.Output},
-			Bucket: fmt.Sprintf("mockBUCKET_%d", i),
-			Key:    fmt.Sprintf("mockKEY_%d", i),
-			Source: fmt.Sprintf("mockSOURCE_%d", i),
+			Client:   mockedPutObjectOutput{Output: tt.Output},
+			Bucket:   fmt.Sprintf("mockBUCKET_%d", i),
+			Key:      fmt.Sprintf("mockKEY_%d", i),
+			Source:   fmt.Sprintf("mockSOURCE_%d", i),
+			Reader:   bufio.NewReader(reader),
+			ByteSize: 5,
 		}
 		versionID, err := p.putS3Cse()
 		if err != nil {
