@@ -68,14 +68,14 @@ to decrypt it securely.`,
 		svc := s3crypto.NewDecryptionClient(sess)
 		svc.CEKRegistry[crosscrypto.AESCBCPKCS5Padding] = crosscrypto.NewAESCBCContentCipher
 
-		decyrptionclient := Get{
+		decryptionclient := Get{
 			Client:          svc.S3Client,
 			Bucket:          s3bucket,
 			Key:             s3object,
 			FileDestination: filedest,
 		}
 
-		err = decyrptionclient.getS3Cse()
+		err = decryptionclient.getS3Cse()
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
