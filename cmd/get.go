@@ -75,7 +75,15 @@ to decrypt it securely.`,
 			FileDestination: filedest,
 		}
 
-		err = decryptionclient.getS3Cse()
+		content, err := decryptionclient.getS3Cse()
+		// Pretty-print the response data.
+		f, err := os.Create(filedest)
+		defer f.Close()
+		if err != nil {
+			fmt.Println(err)
+		}
+		io.Copy(f, content)
+		content.Close()
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -91,7 +99,7 @@ type Get struct {
 	FileDestination string
 }
 
-func (g *Get) getS3Cse() error {
+func (g *Get) getS3Cse() (io.ReadCloser, error) {
 	// fmt.Println("getS3 bucket:" + s3bucket + " object:" + s3object + " dest:" + filedest)
 	// cmkID := "_unused_get_kms_key_"
 
@@ -105,21 +113,10 @@ func (g *Get) getS3Cse() error {
 		// Print the error, cast err to awserr.Error to get the Code and
 		// Message from an error.
 		fmt.Println(err)
-		return err
+		return nil, err
 	}
 
-	// Pretty-print the response data.
-	// fmt.Println(resp)
-	// n, err :=
-	f, err := os.Create(g.FileDestination)
-	defer f.Close()
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-	io.Copy(f, result.Body)
-	result.Body.Close()
-	return nil
+	return result.Body, nil
 }
 
 func init() {
