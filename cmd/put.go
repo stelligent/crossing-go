@@ -1,11 +1,12 @@
 package cmd
 
 import (
-	"bytes"
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -55,6 +56,18 @@ a file to S3.`,
 			s3object = s3object + sourceFile
 		}
 
+		//Open file
+		file, err := os.Open(sourceFile)
+
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "err opening file: %s", err)
+		}
+
+		defer file.Close()
+
+		fileInfo, _ := file.Stat()
+		size := fileInfo.Size()
+
 		//Return an encryption client from the global session
 		cmkID := viper.GetString("kmskeyid")
 		newSess := viper.Get("ClientSess").(*session.Session)
@@ -63,10 +76,12 @@ a file to S3.`,
 		cipher := s3crypto.AESCBCContentCipherBuilder(handler, crosscrypto.NewPKCS7Padder(16))
 		svc := s3crypto.NewEncryptionClient(newSess, cipher)
 		encryptionclient := Put{
-			Client: svc.S3Client,
-			Bucket: s3bucket,
-			Key:    s3object,
-			Source: sourceFile,
+			Client:   svc.S3Client,
+			Bucket:   s3bucket,
+			Key:      s3object,
+			Source:   sourceFile,
+			Reader:   bufio.NewReader(file),
+			ByteSize: int(size),
 		}
 
 		versionID, err := encryptionclient.putS3Cse()
@@ -85,33 +100,21 @@ a file to S3.`,
 
 // Put provides the ability to put objects
 type Put struct {
-	Client s3iface.S3API
-	Bucket string
-	Key    string
-	Source string
+	Client   s3iface.S3API
+	Bucket   string
+	Key      string
+	Source   string
+	Reader   *bufio.Reader
+	ByteSize int
 }
 
 func (p *Put) putS3Cse() ([]byte, error) {
-	file, err := os.Open(p.Source)
-
-	if err != nil {
-		fmtErr := fmt.Errorf("err opening file: %s", err)
-
-		return nil, fmtErr
-	}
-
-	defer file.Close()
-	fileInfo, _ := file.Stat()
-	size := fileInfo.Size()
-	buffer := make([]byte, size)
-	file.Read(buffer)
-	fileBytes := bytes.NewReader(buffer)
-	fileType := http.DetectContentType(buffer)
-
+	content, _ := p.Reader.Peek(p.ByteSize)
+	fileType := http.DetectContentType(content)
 	result, err := p.Client.PutObject(&s3.PutObjectInput{
 		Bucket:      aws.String(p.Bucket),
 		Key:         aws.String(p.Key),
-		Body:        fileBytes,
+		Body:        aws.ReadSeekCloser(strings.NewReader(string(content))),
 		ContentType: aws.String(fileType),
 	})
 
