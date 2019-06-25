@@ -1,36 +1,57 @@
 package cmd
 
 import (
+	"bytes"
+	"fmt"
+	"io/ioutil"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 )
 
+type mockGetObjectOutput struct {
+	s3iface.S3API
+	Output s3.GetObjectOutput
+}
+
+func (m mockGetObjectOutput) GetObject(in *s3.GetObjectInput) (*s3.GetObjectOutput, error) {
+	return &m.Output, nil
+}
+
 func TestGet_getS3Cse(t *testing.T) {
-	type fields struct {
-		Client          s3iface.S3API
-		Bucket          string
-		Key             string
-		FileDestination string
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		wantErr bool
+
+	cases := []struct {
+		Output   s3.GetObjectOutput
+		Expected []byte
 	}{
-		// TODO: Add test cases.
+		{ // Case 1, expect successful output
+			Output: s3.GetObjectOutput{
+				Body: ioutil.NopCloser(bytes.NewBuffer([]byte("Hello"))),
+			},
+			Expected: []byte("Hello"),
+		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			g := &Get{
-				Client:          tt.fields.Client,
-				Bucket:          tt.fields.Bucket,
-				Key:             tt.fields.Key,
-				FileDestination: tt.fields.FileDestination,
-			}
-			if err := g.getS3Cse(); (err != nil) != tt.wantErr {
-				t.Errorf("Get.getS3Cse() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
+
+	for i, tt := range cases {
+		g := Get{
+			Client:          mockGetObjectOutput{Output: tt.Output},
+			Bucket:          fmt.Sprintf("mockBUCKET_%d", i),
+			Key:             fmt.Sprintf("mockKEY_%d", i),
+			FileDestination: fmt.Sprintf("mockDESTINATION_%d", i),
+		}
+		content, err := g.getS3Cse()
+		if err != nil {
+			t.Fatalf("Unexpected error, %v", err)
+		}
+		bufOne := new(bytes.Buffer)
+		bufOne.ReadFrom(content)
+		actual := bufOne.String()
+		expected := string(tt.Expected)
+		if actual != expected {
+			t.Log("Actual: ", actual)
+			t.Log("Expected: ", expected)
+			t.Fatalf("Expected: %v, Actual: %v", actual, expected)
+		}
 	}
 }
