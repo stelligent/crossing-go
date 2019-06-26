@@ -58,7 +58,6 @@ workflows:
           requires:
             - unit_test
             - integration_test
-            - build
           filters:
             branches:
               only: integrationtesting
