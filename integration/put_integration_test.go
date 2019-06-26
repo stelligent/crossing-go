@@ -45,7 +45,7 @@ func SetupPut() {
 	)
 
 	setUpBucket(sess, bucketName)
-	kmsKey = setupKmsKey(sess, prefix)
+	kmsKey = setupKmsKey(sess)
 
 	if err != nil {
 		exitErrorf("Unable to create session", err)
@@ -55,7 +55,6 @@ func SetupPut() {
 
 func exitErrorf(msg string, args ...interface{}) {
 	fmt.Fprintf(os.Stderr, msg+"\n", args...)
-	os.Exit(1)
 }
 
 func setUpBucket(sess *session.Session, bucketName string) {
@@ -159,7 +158,7 @@ func randStringBytesMaskImprSrcUnsafe(n int) string {
 }
 
 //Setup KMS key
-func setupKmsKey(sess *session.Session, prefix string) string {
+func setupKmsKey(sess *session.Session) string {
 	rando := strings.ToLower(randStringBytesMaskImprSrcUnsafe(9))
 	buffer := bytes.NewBufferString(prefix)
 	buffer.WriteString(rando)
@@ -189,9 +188,9 @@ func setupKmsKey(sess *session.Session, prefix string) string {
 	} else {
 		fmt.Printf("Returning key: %q", returnkey)
 	}
-
+	newalias := "alias/" + aliasname
 	aliasreq, aliasresp := svc.CreateAliasRequest(&kms.CreateAliasInput{
-		AliasName:   aws.String(aliasname),
+		AliasName:   aws.String(newalias),
 		TargetKeyId: aws.String(string(returnkey)),
 	})
 
@@ -201,7 +200,7 @@ func setupKmsKey(sess *session.Session, prefix string) string {
 	} else {
 		fmt.Println(aliasresp)
 	}
-	return aliasname
+	return newalias
 }
 
 //emptyBucket empties the Amazon S3 bucket
