@@ -1,48 +1,62 @@
 package cmd
 
 import (
-	"testing"
+	"bufio"
 	"fmt"
+	"strings"
+	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 )
 
-// TestPutS3Cse tests functionality of putS3Cse
-func TestPutS3Cse(t *testing.T) {
-	vString, err := putS3Cse("nosuchbucket", "nokey", "badkmsid", "invalidsource")
-	assert.Error(t, err, "Calling with bad data returns error")
-	fmt.Println(vString)
+type mockedPutObjectOutput struct {
+	s3iface.S3API
+	Output s3.PutObjectOutput
 }
 
-func Test_putS3Cse(t *testing.T) {
-	type args struct {
-		bucket   string
-		key      string
-		kmskeyid string
-		source   string
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
+func (m mockedPutObjectOutput) PutObject(in *s3.PutObjectInput) (*s3.PutObjectOutput, error) {
+	return &m.Output, nil
+}
+func TestPut_putS3Cse(t *testing.T) {
+	reader := strings.NewReader("Hello")
+	cases := []struct {
+		Output   s3.PutObjectOutput
+		Expected []byte
 	}{
-		{
-			name: "Bad source file",
-			args: args{
-				"nosuchbucket",
-				"nosuchkey",
-				"nosuchcmkid",
-				"nosuchsource",
+		{ // Case 1, expect output with versionId
+			Output: s3.PutObjectOutput{
+				VersionId: aws.String(".FLQEZscLIcfxSq.jsFJ.szUkmng2Yw6"),
 			},
-			wantErr: true,
+			Expected: []byte("\".FLQEZscLIcfxSq.jsFJ.szUkmng2Yw6\""),
+		},
+		{ // Case 2, no versionId returned
+			Output: s3.PutObjectOutput{
+				VersionId: new(string),
+			},
+			Expected: []byte("\"\""),
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if vString, err := putS3Cse(tt.args.bucket, tt.args.key, tt.args.kmskeyid, tt.args.source); (err != nil) != tt.wantErr {
-				t.Errorf("putS3Cse() error = %v, wantErr %v", err, tt.wantErr)
-				fmt.Println(vString)
-			}		
-		})
+
+	for i, tt := range cases {
+		p := Put{
+			Client:   mockedPutObjectOutput{Output: tt.Output},
+			Bucket:   fmt.Sprintf("mockBUCKET_%d", i),
+			Key:      fmt.Sprintf("mockKEY_%d", i),
+			Source:   fmt.Sprintf("mockSOURCE_%d", i),
+			Reader:   bufio.NewReader(reader),
+			ByteSize: 5,
+		}
+		versionID, err := p.putS3Cse()
+		if err != nil {
+			t.Fatalf("Unexpected error, %v", err)
+		}
+		if a, e := len(versionID), len(tt.Expected); a != e {
+			t.Log("VersionId: ", string(versionID))
+			t.Log("Expected: ", string(tt.Expected))
+			t.Fatalf("Expected %d, length %d", a, e)
+
+		}
 	}
 }

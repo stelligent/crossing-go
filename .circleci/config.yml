@@ -38,7 +38,6 @@ jobs:
             VERSION=$(./crossing-go --version | awk '{ print $3 }')
             echo "New Version: ${VERSION}"
             ghr -t ${GITHUB_TOKEN} -u ${GITHUB_ORG_NAME} -r ${GITHUB_REPO_NAME} -c ${CIRCLE_SHA1} -delete ${VERSION} .
-
 workflows:
   version: 2
   test-and-publish:

@@ -1,21 +1,23 @@
 package cmd
 
 import (
-	"bytes"
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3crypto"
+	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/stelligent/crossing-go/crypto"
+	crosscrypto "github.com/stelligent/crossing-go/crypto"
 )
 
 // putCmd represents the put command
@@ -53,7 +55,36 @@ a file to S3.`,
 		if s3object[len(s3object)-1:] == "/" {
 			s3object = s3object + sourceFile
 		}
-		versionId, err := putS3Cse(s3bucket, s3object, viper.GetString("kmskeyid"), sourceFile)
+
+		//Open file
+		file, err := os.Open(sourceFile)
+
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "err opening file: %s", err)
+		}
+
+		defer file.Close()
+
+		fileInfo, _ := file.Stat()
+		size := fileInfo.Size()
+
+		//Return an encryption client from the global session
+		cmkID := viper.GetString("kmskeyid")
+		newSess := viper.Get("ClientSess").(*session.Session)
+		//Create the KeyProvider
+		handler := s3crypto.NewKMSKeyGenerator(kms.New(newSess), cmkID)
+		cipher := s3crypto.AESCBCContentCipherBuilder(handler, crosscrypto.NewPKCS7Padder(16))
+		svc := s3crypto.NewEncryptionClient(newSess, cipher)
+		encryptionclient := Put{
+			Client:   svc.S3Client,
+			Bucket:   s3bucket,
+			Key:      s3object,
+			Source:   sourceFile,
+			Reader:   bufio.NewReader(file),
+			ByteSize: int(size),
+		}
+
+		versionID, err := encryptionclient.putS3Cse()
 		flagBool := viper.GetBool("verboseoutput")
 
 		if err != nil {
@@ -61,45 +92,31 @@ a file to S3.`,
 			os.Exit(1)
 		}
 		if flagBool {
-			fmt.Fprintf(os.Stdout, "{ \"VersionId\": %s }\n", string(versionId))
+			fmt.Fprintf(os.Stdout, "{ \"VersionId\": %s }\n", string(versionID))
 		}
 
 	},
 }
 
-func putS3Cse(bucket string, key string, kmskeyid string, source string) ([]byte, error) {
-	file, err := os.Open(source)
-	if err != nil {
-		fmtErr := fmt.Errorf("err opening file: %s", err)
+// Put provides the ability to put objects
+type Put struct {
+	Client   s3iface.S3API
+	Bucket   string
+	Key      string
+	Source   string
+	Reader   *bufio.Reader
+	ByteSize int
+}
 
-		return nil, fmtErr
-	}
-	defer file.Close()
-	fileInfo, _ := file.Stat()
-	size := fileInfo.Size()
-	buffer := make([]byte, size)
-	file.Read(buffer)
-	fileBytes := bytes.NewReader(buffer)
-	fileType := http.DetectContentType(buffer)
-
-	params := &s3.PutObjectInput{
-		Bucket: &bucket,
-		Key:    &key,
-		Body:   fileBytes,
-		// ContentLength: aws.Int64(size),
+func (p *Put) putS3Cse() ([]byte, error) {
+	content, _ := p.Reader.Peek(p.ByteSize)
+	fileType := http.DetectContentType(content)
+	result, err := p.Client.PutObject(&s3.PutObjectInput{
+		Bucket:      aws.String(p.Bucket),
+		Key:         aws.String(p.Key),
+		Body:        aws.ReadSeekCloser(strings.NewReader(string(content))),
 		ContentType: aws.String(fileType),
-	}
-	sess := session.Must(session.NewSessionWithOptions(session.Options{
-		SharedConfigState: session.SharedConfigEnable,
-	}))
-	cmkID := kmskeyid
-	// Create the KeyProvider
-	handler := s3crypto.NewKMSKeyGenerator(kms.New(sess), cmkID)
-
-	// Create an encryption and decryption client
-	svc := s3crypto.NewEncryptionClient(sess, s3crypto.AESCBCContentCipherBuilder(handler, crosscrypto.NewPKCS7Padder(16)))
-
-	result, err := svc.PutObject(params)
+	})
 
 	if err != nil {
 		fmtErr := fmt.Errorf("bad response: %s", err)
@@ -107,14 +124,14 @@ func putS3Cse(bucket string, key string, kmskeyid string, source string) ([]byte
 		return nil, fmtErr
 	}
 
-	versionId, err := json.Marshal(result.VersionId)
+	versionID, err := json.Marshal(result.VersionId)
 
 	if err != nil {
 		fmtErr := fmt.Errorf("Issue with json.Marshal %s", err)
 		return nil, fmtErr
 	}
 
-	return versionId, nil
+	return versionID, nil
 
 }
 
