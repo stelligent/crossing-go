@@ -72,6 +72,7 @@ to decrypt it securely.`,
 			Client:          svc.S3Client,
 			Bucket:          s3bucket,
 			Key:             s3object,
+			Version:         viper.GetString("versionid"),
 			FileDestination: filedest,
 		}
 
@@ -96,6 +97,7 @@ type Get struct {
 	Client          s3iface.S3API
 	Bucket          string
 	Key             string
+	Version         string
 	FileDestination string
 }
 
@@ -103,10 +105,15 @@ func (g *Get) getS3Cse() (io.ReadCloser, error) {
 	// fmt.Println("getS3 bucket:" + s3bucket + " object:" + s3object + " dest:" + filedest)
 	// cmkID := "_unused_get_kms_key_"
 
-	result, err := g.Client.GetObject(&s3.GetObjectInput{
+	params := s3.GetObjectInput{
 		Bucket: aws.String(g.Bucket),
 		Key:    aws.String(g.Key),
-	})
+	}
+	if g.Version != "" {
+		params.VersionId = aws.String(g.Version)
+	}
+
+	result, err := g.Client.GetObject(&params)
 
 	if err != nil {
 		fmt.Println("Error in fetch!")
@@ -132,4 +139,6 @@ func init() {
 	// is called directly, e.g.:
 	// getCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
+	getCmd.Flags().StringP("version-id", "v", "", "Version ID of the object to download")
+	viper.BindPFlag("versionid", getCmd.Flags().Lookup("version-id"))
 }
