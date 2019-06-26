@@ -51,16 +51,12 @@ func SetupPut() {
 	source = "/tmp/dat1"
 	createWriteFile()
 
-	sess, err := session.NewSession(&aws.Config{
-		Region: aws.String("us-east-2")},
-	)
+	sess := session.Must(session.NewSessionWithOptions(session.Options{
+		SharedConfigState: session.SharedConfigEnable,
+	}))
 
 	setUpBucket(sess, bucketName)
 	kmsKey = setupKmsKey(sess)
-
-	if err != nil {
-		exitErrorf("Unable to create session", err)
-	}
 
 }
 
@@ -216,9 +212,9 @@ func setupKmsKey(sess *session.Session) string {
 
 //emptyBucket empties the Amazon S3 bucket
 func emptyBucket() {
-	sess, _ := session.NewSession(&aws.Config{
-		Region: aws.String("us-east-2")},
-	)
+	sess := session.Must(session.NewSessionWithOptions(session.Options{
+		SharedConfigState: session.SharedConfigEnable,
+	}))
 
 	svc := s3.New(sess)
 
@@ -250,13 +246,9 @@ func emptyBucket() {
 }
 
 func deleteBucket() {
-	sess, err := session.NewSession(&aws.Config{
-		Region: aws.String("us-east-2")},
-	)
-
-	if err != nil {
-		exitErrorf("Unable to create session", err)
-	}
+	sess := session.Must(session.NewSessionWithOptions(session.Options{
+		SharedConfigState: session.SharedConfigEnable,
+	}))
 
 	s3svc := s3.New(sess)
 
@@ -277,9 +269,9 @@ func deleteBucket() {
 
 //PutCleanUp destroys all resources created for integration testing
 func PutCleanUp() {
-	sess, err := session.NewSession(&aws.Config{
-		Region: aws.String("us-east-2")},
-	)
+	sess := session.Must(session.NewSessionWithOptions(session.Options{
+		SharedConfigState: session.SharedConfigEnable,
+	}))
 	// Empty bucket
 	emptyBucket()
 
