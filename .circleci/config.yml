@@ -10,6 +10,16 @@ jobs:
           command: |
             cd cmd
             go test
+    integration_test:
+      docker:
+        - image: circleci/golang:1.12
+      steps:
+        - checkout
+        - run:
+            name: Run integration tests
+            command: |
+              cd integration
+              go test -all
   build:
     docker:
       - image: circleci/golang:1.12
@@ -43,10 +53,15 @@ workflows:
   test-and-publish:
     jobs:
       - unit_test
+      - integration_test
+          filters:
+            branches:
+              only: integrationtesting
       - build
       - publish:
           requires:
             - unit_test
+            - integration_test
             - build
           filters:
             branches:
