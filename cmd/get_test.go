@@ -38,6 +38,7 @@ func TestGet_getS3Cse(t *testing.T) {
 			Client:          mockGetObjectOutput{Output: tt.Output},
 			Bucket:          fmt.Sprintf("mockBUCKET_%d", i),
 			Key:             fmt.Sprintf("mockKEY_%d", i),
+			Version:         fmt.Sprintf("mockVERSION_%d", i),
 			FileDestination: fmt.Sprintf("mockDESTINATION_%d", i),
 		}
 		content, err := g.getS3Cse()
