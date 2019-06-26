@@ -54,6 +54,7 @@ workflows:
     jobs:
       - unit_test
       - integration_test
+      - integration:
           requires:
             - unit_test
             - integration_test
@@ -65,7 +66,6 @@ workflows:
       - publish:
           requires:
             - unit_test
-            - integration_test
             - build
           filters:
             branches:
