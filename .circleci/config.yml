@@ -53,10 +53,8 @@ workflows:
   test-and-publish:
     jobs:
       - unit_test
-      - integration_test
-      - integration:
+      - integration_test:
           requires:
-            - unit_test
             - integration_test
           filters:
             branches:
