@@ -211,10 +211,7 @@ func setupKmsKey(sess *session.Session) string {
 }
 
 //emptyBucket empties the Amazon S3 bucket
-func emptyBucket() {
-	sess := session.Must(session.NewSessionWithOptions(session.Options{
-		SharedConfigState: session.SharedConfigEnable,
-	}))
+func emptyBucket(sess *session.Session) {
 
 	svc := s3.New(sess)
 
@@ -242,13 +239,21 @@ func emptyBucket() {
 		} else {
 			fmt.Println("Deleted: ", resp)
 		}
+
+		fmt.Printf("Waiting for object to be deleted: %q, Id: %q", *version.Key, *version.VersionId)
+		delerror := svc.WaitUntilObjectNotExists(&s3.HeadObjectInput{
+			Bucket:    aws.String(bucketName),
+			Key:       version.Key,
+			VersionId: version.VersionId,
+		})
+
+		if delerror != nil {
+			fmt.Printf("Error occurred deleting object: %q, Id: %q", *version.Key, *version.VersionId)
+		}
 	}
 }
 
-func deleteBucket() {
-	sess := session.Must(session.NewSessionWithOptions(session.Options{
-		SharedConfigState: session.SharedConfigEnable,
-	}))
+func deleteBucket(sess *session.Session) {
 
 	s3svc := s3.New(sess)
 
@@ -261,7 +266,7 @@ func deleteBucket() {
 
 	if s3buckerr != nil {
 		fmt.Println("Error occurred deleting bucket: ", s3buckerr)
-		emptyBucket()
+		emptyBucket(sess)
 	} else {
 		fmt.Println("Delete was successful", s3buckresp)
 	}
@@ -273,10 +278,10 @@ func PutCleanUp() {
 		SharedConfigState: session.SharedConfigEnable,
 	}))
 	// Empty bucket
-	emptyBucket()
+	emptyBucket(sess)
 
 	// Delete bucket
-	deleteBucket()
+	deleteBucket(sess)
 
 	// Delete kms key
 	kmssvc := kms.New(sess)
