@@ -1,7 +1,6 @@
 package integration
 
 import (
-	"bufio"
 	"bytes"
 	"fmt"
 	"math/rand"
@@ -9,7 +8,6 @@ import (
 	"strings"
 	"testing"
 	"time"
-	"unicode/utf8"
 	"unsafe"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -17,10 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3crypto"
-	crosscrypto "github.com/stelligent/crossing-go/crypto"
-	"github.com/stelligent/crossing-go/cmd/Put"
-
+	"github.com/stelligent/crossing-go/cmd"
 )
 
 var (
@@ -33,57 +28,16 @@ var (
 
 //TestPutIntegration will test putS3Cse for a return value of a valid UTF-8 encoded version id
 func TestPutIntegration(t *testing.T) {
-	//Open file
-	file, err := os.Open(source)
-
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "err opening file: %s", err)
-	}
-
-	defer file.Close()
-
-	fileInfo, _ := file.Stat()
-	size := fileInfo.Size()
-
-	//Return an encryption client from the global session
-	cmkID := kmsKey
-	newSess, err := session.NewSession(&aws.Config{
-		Region: aws.String("us-east-2")},
-	)
-	//Create the KeyProvider
-	handler := s3crypto.NewKMSKeyGenerator(kms.New(newSess), cmkID)
-	cipher := s3crypto.AESCBCContentCipherBuilder(handler, crosscrypto.NewPKCS7Padder(16))
-	svc := s3crypto.NewEncryptionClient(newSess, cipher)
-	encryptionclient := &cmd.Put{
-		Client:   svc.S3Client,
-		Bucket:   bucketName,
-		Key:      key,
-		Source:   source,
-		Reader:   bufio.NewReader(file),
-		ByteSize: int(size),
-	}
-
-	args := []struct {
-		bucket     string
-		file       string
-		kmskeyid   string
-		filesource string
-		isEncoded  bool
-	}{
-		{bucketName, key, kmsKey, source, true},
-	}
-
-	for _, arg := range args {
-		vstring, err := putS3Cse()
-		isvalid := utf8.Valid(vstring)
-		if err != nil {
-			t.Errorf("Error occured: %v", err)
-		} else if len(vstring) < 0 {
-			t.Errorf("No version string was returned")
-		} else if isvalid == true {
-			t.Logf("Success! %v", vstring)
-		}
-	}
+	var arguments []string
+	destination := "s3://" + bucketName + "/" + key
+	arguments = append(arguments, "put")
+	arguments = append(arguments, "-V")
+	arguments = append(arguments, "-k")
+	arguments = append(arguments, kmsKey)
+	arguments = append(arguments, source)
+	arguments = append(arguments, destination)
+	cmd.RootCmd.SetArgs(arguments)
+	cmd.Execute()
 }
 
 //SetupPut sets up an S3 Bucket, KMS key, and writes a file for Put integration testing
