@@ -216,8 +216,7 @@ func emptyBucket(sess *session.Session) {
 	svc := s3.New(sess)
 
 	objectversions, err := svc.ListObjectVersions(&s3.ListObjectVersionsInput{
-		Bucket:    aws.String(bucketName),
-		KeyMarker: aws.String(key),
+		Bucket: aws.String(bucketName),
 	})
 
 	if err != nil {
@@ -251,11 +250,48 @@ func emptyBucket(sess *session.Session) {
 			fmt.Printf("Error occurred deleting object: %q, Id: %q", *version.Key, *version.VersionId)
 		}
 	}
+
+	objects, err := svc.ListObjects(&s3.ListObjectsInput{
+		Bucket: aws.String(bucketName),
+	})
+
+	for _, obj := range objects.Contents {
+		resp, err := svc.DeleteObject(&s3.DeleteObjectInput{
+			Bucket: aws.String(bucketName),
+			Key:    obj.Key,
+		})
+		if err != nil {
+			fmt.Printf("Error occurred deleting object: %q, error: %q", *obj.Key, err)
+		} else {
+			fmt.Print(resp)
+		}
+
+	}
 }
 
 func deleteBucket(sess *session.Session) {
 
 	s3svc := s3.New(sess)
+
+	objectversions, err := s3svc.ListObjectVersions(&s3.ListObjectVersionsInput{
+		Bucket: aws.String(bucketName),
+	})
+
+	if err != nil {
+		exitErrorf("Listing error occurred: ", err)
+	} else if len(objectversions.Versions) > 0 {
+		emptyBucket(sess)
+	}
+
+	objects, err := s3svc.ListObjects(&s3.ListObjectsInput{
+		Bucket: aws.String(bucketName),
+	})
+
+	if err != nil {
+		exitErrorf("Listing error occurred: ", err)
+	} else if len(objects.Contents) > 0 {
+		emptyBucket(sess)
+	}
 
 	// Delete test bucket
 	s3buckreq, s3buckresp := s3svc.DeleteBucketRequest(&s3.DeleteBucketInput{
