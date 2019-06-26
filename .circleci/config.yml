@@ -10,16 +10,16 @@ jobs:
           command: |
             cd cmd
             go test
-    integration_test:
-      docker:
-        - image: circleci/golang:1.12
-      steps:
-        - checkout
-        - run:
-            name: Run integration tests
-            command: |
-              cd integration
-              go test -all
+  integration_test:
+    docker:
+      - image: circleci/golang:1.12
+    steps:
+      - checkout
+      - run:
+          name: Run integration tests
+          command: |
+            cd integration
+            go test -all
   build:
     docker:
       - image: circleci/golang:1.12
