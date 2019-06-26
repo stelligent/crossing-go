@@ -15,7 +15,7 @@ var cfgFile string
 var RootCmd = &cobra.Command{
 	Use:     "crossing-go",
 	Short:   "An S3 utility using client-side encryption",
-	Version: "0.0.1",
+	Version: "0.1.0",
 	Long: `crossing-go implements get/put to S3 using KMS envelope
 client-side encryption with the AWS SDK. It is intended to be object
 compatible with the Ruby crossing utility.`,
