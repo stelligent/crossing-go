@@ -8,47 +8,43 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 )
 
-type mockedPutObjectOutput struct {
-	s3iface.S3API
-	Output s3.PutObjectOutput
-}
+//TestPutS3Cse will test putS3Cse
+func TestPutS3Cse(t *testing.T) {
 
-func (m mockedPutObjectOutput) PutObject(in *s3.PutObjectInput) (*s3.PutObjectOutput, error) {
-	return &m.Output, nil
-}
-func TestPut_putS3Cse(t *testing.T) {
 	reader := strings.NewReader("Hello")
 	cases := []struct {
-		Output   s3.PutObjectOutput
-		Expected []byte
+		S3Encrypt *MockS3ClientPutAPI
+		Expected  []byte
 	}{
 		{ // Case 1, expect output with versionId
-			Output: s3.PutObjectOutput{
-				VersionId: aws.String(".FLQEZscLIcfxSq.jsFJ.szUkmng2Yw6"),
+			S3Encrypt: &MockS3ClientPutAPI{
+				PutObjectOutput: &s3.PutObjectOutput{
+					VersionId: aws.String(".FLQEZscLIcfxSq.jsFJ.szUkmng2Yw6"),
+				},
 			},
 			Expected: []byte("\".FLQEZscLIcfxSq.jsFJ.szUkmng2Yw6\""),
 		},
 		{ // Case 2, no versionId returned
-			Output: s3.PutObjectOutput{
-				VersionId: new(string),
+			S3Encrypt: &MockS3ClientPutAPI{
+				PutObjectOutput: &s3.PutObjectOutput{
+					VersionId: new(string),
+				},
 			},
 			Expected: []byte("\"\""),
 		},
 	}
 
 	for i, tt := range cases {
-		p := Put{
-			Client:   mockedPutObjectOutput{Output: tt.Output},
+		p := &PutObject{
 			Bucket:   fmt.Sprintf("mockBUCKET_%d", i),
 			Key:      fmt.Sprintf("mockKEY_%d", i),
 			Source:   fmt.Sprintf("mockSOURCE_%d", i),
 			Reader:   bufio.NewReader(reader),
 			ByteSize: 5,
 		}
-		versionID, err := p.putS3Cse()
+		versionID, err := PutS3Cse(p, tt.S3Encrypt)
 		if err != nil {
 			t.Fatalf("Unexpected error, %v", err)
 		}

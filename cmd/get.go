@@ -6,13 +6,8 @@ import (
 	"os"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3/s3crypto"
-	"github.com/aws/aws-sdk-go/service/s3/s3iface"
-	crosscrypto "github.com/stelligent/crossing-go/crypto"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"strings"
 
@@ -64,18 +59,14 @@ to decrypt it securely.`,
 			filedest = filedest + "/" + objectComponents[len(objectComponents)-1]
 		}
 
-		sess := viper.Get("ClientSess").(*session.Session)
-		svc := s3crypto.NewDecryptionClient(sess)
-		svc.CEKRegistry[crosscrypto.AESCBCPKCS5Padding] = crosscrypto.NewAESCBCContentCipher
-
-		decryptionclient := Get{
-			Client:          svc.S3Client,
+		getobj := &GetObject{
 			Bucket:          s3bucket,
 			Key:             s3object,
 			FileDestination: filedest,
 		}
+		decryptionclient := NewDecryptionClient()
 
-		content, err := decryptionclient.getS3Cse()
+		content, err := GetS3Cse(getobj, decryptionclient)
 		// Pretty-print the response data.
 		f, err := os.Create(filedest)
 		defer f.Close()
@@ -91,19 +82,19 @@ to decrypt it securely.`,
 	},
 }
 
-// Get provides the ability to get objects
-type Get struct {
-	Client          s3iface.S3API
+// GetObject represents params for get object input
+type GetObject struct {
 	Bucket          string
 	Key             string
 	FileDestination string
 }
 
-func (g *Get) getS3Cse() (io.ReadCloser, error) {
+//GetS3Cse gets and decrypts objects from S3
+func GetS3Cse(g *GetObject, decryptionclient S3DecryptionClientAPI) (io.ReadCloser, error) {
 	// fmt.Println("getS3 bucket:" + s3bucket + " object:" + s3object + " dest:" + filedest)
 	// cmkID := "_unused_get_kms_key_"
 
-	result, err := g.Client.GetObject(&s3.GetObjectInput{
+	result, err := decryptionclient.GetObject(&s3.GetObjectInput{
 		Bucket: aws.String(g.Bucket),
 		Key:    aws.String(g.Key),
 	})

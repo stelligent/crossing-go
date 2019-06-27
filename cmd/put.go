@@ -9,15 +9,9 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3crypto"
-	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-
-	crosscrypto "github.com/stelligent/crossing-go/crypto"
 )
 
 // putCmd represents the put command
@@ -68,15 +62,7 @@ a file to S3.`,
 		fileInfo, _ := file.Stat()
 		size := fileInfo.Size()
 
-		//Return an encryption client from the global session
-		cmkID := viper.GetString("kmskeyid")
-		newSess := viper.Get("ClientSess").(*session.Session)
-		//Create the KeyProvider
-		handler := s3crypto.NewKMSKeyGenerator(kms.New(newSess), cmkID)
-		cipher := s3crypto.AESCBCContentCipherBuilder(handler, crosscrypto.NewPKCS7Padder(16))
-		svc := s3crypto.NewEncryptionClient(newSess, cipher)
-		encryptionclient := Put{
-			Client:   svc.S3Client,
+		putobj := &PutObject{
 			Bucket:   s3bucket,
 			Key:      s3object,
 			Source:   sourceFile,
@@ -84,7 +70,10 @@ a file to S3.`,
 			ByteSize: int(size),
 		}
 
-		versionID, err := encryptionclient.putS3Cse()
+		cmkID := viper.GetString("kmskeyid")
+		encryptionclient := NewEncryptionClient(cmkID)
+
+		versionID, err := PutS3Cse(putobj, encryptionclient)
 		flagBool := viper.GetBool("verboseoutput")
 
 		if err != nil {
@@ -98,9 +87,8 @@ a file to S3.`,
 	},
 }
 
-// Put provides the ability to put objects
-type Put struct {
-	Client   s3iface.S3API
+// PutObject Represents params for object input
+type PutObject struct {
 	Bucket   string
 	Key      string
 	Source   string
@@ -108,10 +96,12 @@ type Put struct {
 	ByteSize int
 }
 
-func (p *Put) putS3Cse() ([]byte, error) {
+//PutS3Cse puts encrypted objects into S3
+func PutS3Cse(p *PutObject, encryptionclient S3ClientPutAPI) ([]byte, error) {
+
 	content, _ := p.Reader.Peek(p.ByteSize)
 	fileType := http.DetectContentType(content)
-	result, err := p.Client.PutObject(&s3.PutObjectInput{
+	result, err := encryptionclient.PutObject(&s3.PutObjectInput{
 		Bucket:      aws.String(p.Bucket),
 		Key:         aws.String(p.Key),
 		Body:        aws.ReadSeekCloser(strings.NewReader(string(content))),
