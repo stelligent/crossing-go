@@ -92,7 +92,7 @@ type GetObject struct {
 //GetS3Cse gets and decrypts objects from S3
 func GetS3Cse(g *GetObject, decryptionclient S3DecryptionClientAPI) (io.ReadCloser, error) {
 	// fmt.Println("getS3 bucket:" + s3bucket + " object:" + s3object + " dest:" + filedest)
-	// cmkID := "_unused_get_kms_key_"
+	// cmkID := "_unused_get_kms_key_"t
 
 	result, err := decryptionclient.GetObject(&s3.GetObjectInput{
 		Bucket: aws.String(g.Bucket),
