@@ -38,6 +38,7 @@ func TestPutIntegration(t *testing.T) {
 	arguments = append(arguments, destination)
 	cmd.RootCmd.SetArgs(arguments)
 	cmd.Execute()
+
 }
 
 //SetupPut sets up an S3 Bucket, KMS key, and writes a file for Put integration testing
