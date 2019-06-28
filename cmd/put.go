@@ -114,10 +114,10 @@ func PutS3Cse(p *PutObject, encryptionclient S3ClientPutAPI) ([]byte, error) {
 		return nil, fmtErr
 	}
 
-	versionID, err := json.Marshal(result.VersionId)
+	versionID, vererr := json.Marshal(result.VersionId)
 
-	if err != nil {
-		fmtErr := fmt.Errorf("Issue with json.Marshal %s", err)
+	if vererr != nil {
+		fmtErr := fmt.Errorf("Issue with json.Marshal %s", vererr)
 		return nil, fmtErr
 	}
 
