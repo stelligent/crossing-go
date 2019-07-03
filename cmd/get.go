@@ -5,12 +5,9 @@ import (
 	"io"
 	"os"
 
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3/s3crypto"
+	"github.com/aws/aws-sdk-go/aws"
 
 	"github.com/spf13/cobra"
-
-	"github.com/stelligent/crossing-go/crypto"
 
 	"strings"
 
@@ -62,7 +59,22 @@ to decrypt it securely.`,
 			filedest = filedest + "/" + objectComponents[len(objectComponents)-1]
 		}
 
-		err = getS3Cse(s3bucket, s3object, filedest)
+		getobj := &GetObject{
+			Bucket:          s3bucket,
+			Key:             s3object,
+			FileDestination: filedest,
+		}
+		decryptionclient := NewDecryptionClient()
+
+		content, err := GetS3Cse(getobj, decryptionclient)
+		// Pretty-print the response data.
+		f, err := os.Create(filedest)
+		defer f.Close()
+		if err != nil {
+			fmt.Println(err)
+		}
+		io.Copy(f, content)
+		content.Close()
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -70,43 +82,32 @@ to decrypt it securely.`,
 	},
 }
 
-func getS3Cse(s3bucket, s3object, filedest string) error {
-	// fmt.Println("getS3 bucket:" + s3bucket + " object:" + s3object + " dest:" + filedest)
-	// cmkID := "_unused_get_kms_key_"
-	params := &s3.GetObjectInput{
-		Bucket: &s3bucket,
-		Key:    &s3object}
-	sess := session.Must(session.NewSessionWithOptions(session.Options{
-		SharedConfigState: session.SharedConfigEnable,
-	}))
-	// Create the KeyProvider
-	// handler := s3crypto.NewKMSKeyGenerator(kms.New(sess), cmkID)
-	// HeaderV2LoadStrategy
-	svc := s3crypto.NewDecryptionClient(sess)
-	svc.CEKRegistry[crosscrypto.AESCBCPKCS5Padding] = crosscrypto.NewAESCBCContentCipher
+// GetObject represents params for get object input
+type GetObject struct {
+	Bucket          string
+	Key             string
+	FileDestination string
+}
 
-	// resp, err := svc.S3Client.GetObject(params)
-	resp, err := svc.GetObject(params)
+//GetS3Cse gets and decrypts objects from S3
+func GetS3Cse(g *GetObject, decryptionclient S3DecryptionClientAPI) (io.ReadCloser, error) {
+	// fmt.Println("getS3 bucket:" + s3bucket + " object:" + s3object + " dest:" + filedest)
+	// cmkID := "_unused_get_kms_key_"t
+
+	result, err := decryptionclient.GetObject(&s3.GetObjectInput{
+		Bucket: aws.String(g.Bucket),
+		Key:    aws.String(g.Key),
+	})
+
 	if err != nil {
 		fmt.Println("Error in fetch!")
 		// Print the error, cast err to awserr.Error to get the Code and
 		// Message from an error.
 		fmt.Println(err)
-		return err
+		return nil, err
 	}
 
-	// Pretty-print the response data.
-	// fmt.Println(resp)
-	// n, err :=
-	f, err := os.Create(filedest)
-	defer f.Close()
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-	io.Copy(f, resp.Body)
-	resp.Body.Close()
-	return nil
+	return result.Body, nil
 }
 
 func init() {

@@ -1,48 +1,58 @@
 package cmd
 
 import (
-	"testing"
+	"bufio"
 	"fmt"
+	"strings"
+	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/s3"
 )
 
-// TestPutS3Cse tests functionality of putS3Cse
+//TestPutS3Cse will test putS3Cse
 func TestPutS3Cse(t *testing.T) {
-	vString, err := putS3Cse("nosuchbucket", "nokey", "badkmsid", "invalidsource")
-	assert.Error(t, err, "Calling with bad data returns error")
-	fmt.Println(vString)
-}
 
-func Test_putS3Cse(t *testing.T) {
-	type args struct {
-		bucket   string
-		key      string
-		kmskeyid string
-		source   string
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
+	reader := strings.NewReader("Hello")
+	cases := []struct {
+		S3Encrypt *MockS3ClientPutAPI
+		Expected  []byte
 	}{
-		{
-			name: "Bad source file",
-			args: args{
-				"nosuchbucket",
-				"nosuchkey",
-				"nosuchcmkid",
-				"nosuchsource",
+		{ // Case 1, expect output with versionId
+			S3Encrypt: &MockS3ClientPutAPI{
+				PutObjectOutput: &s3.PutObjectOutput{
+					VersionId: aws.String(".FLQEZscLIcfxSq.jsFJ.szUkmng2Yw6"),
+				},
 			},
-			wantErr: true,
+			Expected: []byte("\".FLQEZscLIcfxSq.jsFJ.szUkmng2Yw6\""),
+		},
+		{ // Case 2, no versionId returned
+			S3Encrypt: &MockS3ClientPutAPI{
+				PutObjectOutput: &s3.PutObjectOutput{
+					VersionId: new(string),
+				},
+			},
+			Expected: []byte("\"\""),
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if vString, err := putS3Cse(tt.args.bucket, tt.args.key, tt.args.kmskeyid, tt.args.source); (err != nil) != tt.wantErr {
-				t.Errorf("putS3Cse() error = %v, wantErr %v", err, tt.wantErr)
-				fmt.Println(vString)
-			}		
-		})
+
+	for i, tt := range cases {
+		p := &PutObject{
+			Bucket:   fmt.Sprintf("mockBUCKET_%d", i),
+			Key:      fmt.Sprintf("mockKEY_%d", i),
+			Source:   fmt.Sprintf("mockSOURCE_%d", i),
+			Reader:   bufio.NewReader(reader),
+			ByteSize: 5,
+		}
+		versionID, err := PutS3Cse(p, tt.S3Encrypt)
+		if err != nil {
+			t.Fatalf("Unexpected error, %v", err)
+		}
+		if a, e := len(versionID), len(tt.Expected); a != e {
+			t.Log("VersionId: ", string(versionID))
+			t.Log("Expected: ", string(tt.Expected))
+			t.Fatalf("Expected %d, length %d", a, e)
+
+		}
 	}
 }
