@@ -30,6 +30,7 @@ func TestGet_getS3Cse(t *testing.T) {
 			Bucket:          fmt.Sprintf("mockBUCKET_%d", i),
 			Key:             fmt.Sprintf("mockKEY_%d", i),
 			FileDestination: fmt.Sprintf("mockDESTINATION_%d", i),
+			Version:         fmt.Sprintf("mockVERSION_%d", i),
 		}
 		content, err := GetS3Cse(g, tt.S3Decrypt)
 		if err != nil {

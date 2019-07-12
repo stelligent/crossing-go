@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"strings"
 
@@ -63,7 +64,9 @@ to decrypt it securely.`,
 			Bucket:          s3bucket,
 			Key:             s3object,
 			FileDestination: filedest,
+			Version:         viper.GetString("versionid"),
 		}
+
 		decryptionclient := NewDecryptionClient()
 
 		content, geterr := GetS3Cse(getobj, decryptionclient)
@@ -91,6 +94,7 @@ type GetObject struct {
 	Bucket          string
 	Key             string
 	FileDestination string
+	Version         string
 }
 
 //GetS3Cse gets and decrypts objects from S3
@@ -98,10 +102,16 @@ func GetS3Cse(g *GetObject, decryptionclient S3DecryptionClientAPI) (io.ReadClos
 	// fmt.Println("getS3 bucket:" + s3bucket + " object:" + s3object + " dest:" + filedest)
 	// cmkID := "_unused_get_kms_key_"t
 
-	result, err := decryptionclient.GetObject(&s3.GetObjectInput{
+	params := &s3.GetObjectInput{
 		Bucket: aws.String(g.Bucket),
 		Key:    aws.String(g.Key),
-	})
+	}
+
+	if g.Version != "" {
+		params.VersionId = aws.String(g.Version)
+	}
+
+	result, err := decryptionclient.GetObject(params)
 
 	if err != nil {
 		fmt.Println("Error in fetch!")
@@ -126,5 +136,7 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// getCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	getCmd.Flags().StringP("version-id", "v", "", "Version ID of the object to download")
+	viper.BindPFlag("versionid", getCmd.Flags().Lookup("version-id"))
 
 }
