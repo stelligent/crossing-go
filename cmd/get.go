@@ -66,8 +66,12 @@ to decrypt it securely.`,
 		}
 		decryptionclient := NewDecryptionClient()
 
-		content, err := GetS3Cse(getobj, decryptionclient)
+		content, geterr := GetS3Cse(getobj, decryptionclient)
 		// Pretty-print the response data.
+		if geterr != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
 		f, err := os.Create(filedest)
 		defer f.Close()
 		if err != nil {
