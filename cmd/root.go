@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -49,15 +48,9 @@ func initConfig() {
 		viper.SetConfigFile(cfgFile)
 	}
 
-	// Initialize global encryption client and decryption client
-	sess := session.Must(session.NewSessionWithOptions(session.Options{
-		SharedConfigState: session.SharedConfigEnable,
-	}))
-
-	viper.SetConfigName(".crossing-go")  // name of config file (without extension)
-	viper.AddConfigPath("$HOME")         // adding home directory as first search path
-	viper.SetDefault("ClientSess", sess) // set global session to pass around
-	viper.AutomaticEnv()                 // read in environment variables that match
+	viper.SetConfigName(".crossing-go") // name of config file (without extension)
+	viper.AddConfigPath("$HOME")        // adding home directory as first search path
+	viper.AutomaticEnv()                // read in environment variables that match
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
