@@ -151,7 +151,8 @@ Crossing-go has move to go modules for dependency management. Unit tests can be 
 
 ## :children_crossing: Integration Testing
 
-Integration tests are ran to ensure the application can make proper API calls to AWS. This means that an authentication token is required or that AWS CLI must be configured with access key id and access key. The below example uses an aws-vault setup with mfa.
+Integration tests are ran to ensure the application can make proper API calls to AWS. This means that an authentication token is required or that AWS CLI must be configured with an access key id and access key. The below example uses an aws-vault setup with mfa.
+
     ~/crossing-go/cmd$ aws-vault exec home -- go test -all
     wrote 5 bytes
     Waiting for bucket "crossinggojqvzsgmyj" to be created...
@@ -186,6 +187,7 @@ Integration tests are ran to ensure the application can make proper API calls to
     KeyId: "arn:aws:kms:us-east-2:324320755747:key/54348bc1-6e3b-4cda-8b18-c6033ca7d328"
     }
     ok      github.com/stelligent/crossing-go/integration   2.963s
+
 ## CAVEATS / KNOWN BUGS
 
 The "env" subcommand does not correctly escape shell strings
