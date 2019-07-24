@@ -99,23 +99,24 @@ Contributing to crossing-go will require that unit tests pass. To run unit tests
 the instructions under the go modules heading first.
 
 Tests are located in each submodules directory:
-├── cmd
-│   ├── env.go
-│   ├── get.go
-│   ├── get_test.go
-│   ├── put.go
-│   ├── put_test.go
-│   ├── root.go
-│   ├── root_test.go
-│   ├── util.go
-│   └── util_test.go
-├── crypto
-│   ├── aes_cbc_content_cipher.go
-│   ├── aes_cbc_content_cipher_test.go
-│   ├── aes_cbc.go
-│   ├── aes_cbc_test.go
-│   ├── cipher_util.go
-│   └── pkcs5_padder.go
+
+    ├── cmd
+    │   ├── env.go
+    │   ├── get.go
+    │   ├── get_test.go
+    │   ├── put.go
+    │   ├── put_test.go
+    │   ├── root.go
+    │   ├── root_test.go
+    │   ├── util.go
+    │   └── util_test.go
+    ├── crypto
+    │   ├── aes_cbc_content_cipher.go
+    │   ├── aes_cbc_content_cipher_test.go
+    │   ├── aes_cbc.go
+    │   ├── aes_cbc_test.go
+    │   ├── cipher_util.go
+    │   └── pkcs5_padder.go
 
 Running tests for cmd module using the temp AWS profile:
     cd cmd
