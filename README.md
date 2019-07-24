@@ -124,7 +124,7 @@ Running tests for cmd module using the temp AWS profile:
     AWS_PROFILE=temp go test ./...
     ok      github.com/stelligent/crossing-go/cmd
 
-Crossing-go has move to go modules for dependency management. Unit tests can be ran locally via the go test command.
+Crossing-go has moved to go modules for dependency management. Unit tests can be ran locally via the go test command.
 
     ~/crossing-go/cmd$ go test
     crossing-go implements get/put to S3 using KMS envelope
