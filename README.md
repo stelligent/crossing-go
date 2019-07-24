@@ -119,6 +119,7 @@ Tests are located in each submodules directory:
     │   └── pkcs5_padder.go
 
 Running tests for cmd module using the temp AWS profile:
+
     cd cmd
     AWS_PROFILE=temp go test ./...
     ok      github.com/stelligent/crossing-go/cmd
