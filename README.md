@@ -94,7 +94,7 @@ outputs
     export testyml__f__0="1"
     export testyml__f__1="2"
 
-## :children_crossing: Contributing
+## :children_crossing: Unit Testing
 Contributing to crossing-go will require that unit tests pass. To run unit tests in a go module environment please follow 
 the instructions under the go modules heading first.
 
@@ -123,8 +123,9 @@ Running tests for cmd module using the temp AWS profile:
     cd cmd
     AWS_PROFILE=temp go test ./...
     ok      github.com/stelligent/crossing-go/cmd
-## :children_crossing: Contributing
+
 Crossing-go has move to go modules for dependency management. Unit tests can be ran locally via the go test command.
+
     ~/crossing-go/cmd$ go test
     crossing-go implements get/put to S3 using KMS envelope
     client-side encryption with the AWS SDK. It is intended to be object
@@ -147,6 +148,8 @@ Crossing-go has move to go modules for dependency management. Unit tests can be 
     Use "crossing-go [command] --help" for more information about a command.
     PASS
     ok      github.com/stelligent/crossing-go/cmd   0.006s
+
+## :children_crossing: Integration Testing
 
 Integration tests are ran to ensure the application can make proper API calls to AWS. This means that an authentication token is required or that AWS CLI must be configured with access key id and access key. The below example uses an aws-vault setup with mfa.
     ~/crossing-go/cmd$ aws-vault exec home -- go test -all
