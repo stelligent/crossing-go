@@ -194,20 +194,20 @@ func setupKmsKey(sess *session.Session) string {
 	if reqerr != nil {
 		exitErrorf("Empty!", reqerr)
 	} else {
-		fmt.Printf("Returning key: %q", returnkey)
+		fmt.Printf("Returning key: %q\n", returnkey)
 	}
 	newalias := "alias/" + aliasname
 	aliasreq, aliasresp := svc.CreateAliasRequest(&kms.CreateAliasInput{
 		AliasName:   aws.String(newalias),
 		TargetKeyId: aws.String(string(returnkey)),
 	})
-
 	aliaserr := aliasreq.Send()
-	if aliaserr != nil {
-		exitErrorf("Error occured creating alias!", aliaserr)
-	} else {
-		fmt.Println(aliasresp)
+	httpresponse := aliasreq.HTTPResponse
+	if aliaserr == nil {
+		fmt.Printf("Response is now filled: %q, %q\n", aliasresp, httpresponse.Status)
+
 	}
+
 	return newalias
 }
 
